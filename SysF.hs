@@ -61,8 +61,7 @@ data TCError = ErVar Id
              | ErTyVar Id
              | ErApp1 Term Term
              | ErApp2 Term
-             | ErTApp1 Term Type
-             | ErTApp2 Type
+             | ErTApp Term
              deriving (Eq)
 
 -- For pretty printing errors
@@ -72,9 +71,7 @@ instance Show TCError where
   show (ErApp1 trm1 trm2) = concat [show trm2, " is not a valid input to ",
                                    show trm1, "."]
   show (ErApp2 trm) = concat [show trm, " must be an abstraction."]
-  show (ErTApp1 trm typ) = concat [show typ, "is not a valid input to ",
-                                    show trm, "."]
-  show (ErTApp2 trm) = concat [show trm, " must be a type abstraction."]
+  show (ErTApp trm) = concat [show trm, " must be a type abstraction."]
 
 -- Extract id from a binding
 idFromBinding :: Binding -> Id
@@ -114,10 +111,11 @@ typeCheck (TmApp trm1 trm2) ctx = do
 typeCheck (TmTAbs i trm) ctx = do
   typ <- typeCheck trm ((TyBind i):ctx)
   return (TyTAbs i typ)
--- typeCheck (TmTApp trm typ) ctx = do
---   typ' <- typeCheck trm ctx
---   case typ' of
---     (TyTAbs i typ) ->
+typeCheck (TmTApp trm typ) ctx = do
+  typ' <- typeCheck trm ctx
+  case typ' of
+    (TyTAbs i typ) -> typeCheck (eval (TmTApp trm typ) (Map.empty, freshVars)) ctx
+    otherwise -> Left $ ErTApp trm
 
 {- =============================== Evaluation  =================================-}
 
@@ -129,7 +127,7 @@ genFresh :: [Id] -> [Int] -> [Id]
 genFresh (x:xs) (y:ys) = (x ++ (show y)) : genFresh xs ys
 
 
--- State of environment is state of variable/term bindings + list of fresh vars
+-- Environment holds term/type bindings + infinite list of fresh variables
 type Env = (Map Id (Either Term Type), [Id])
 
 -- Evaluate terms, assuming well-typed
