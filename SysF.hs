@@ -5,13 +5,10 @@ Will define syntax for System F, what terms and types look like. Follows
 the specification in Chapter 23 of Pierce's Types and Programming Languages.
 -}
 
-{-|
-TODO:
-Typing, Evaluation
--}
+import Control.Monad.State
+import Data.Map as Map
 
-
-{- ====================== Syntax of Terms & Types  ===========================-}
+{- ====================== Syntax of Terms & Types  ==========================-}
 type Id = String
 
 data Term = TmUnit
@@ -20,8 +17,8 @@ data Term = TmUnit
           | TmVar Id
           | TmAbs Id Type Term
           | TmApp Term Term
-          | TmUniAbs Id Term
-          | TmUniApp Term Type
+          | TmTAbs Id Term
+          | TmTApp Term Type
           deriving (Eq)
 
 -- For pretty printing terms
@@ -33,14 +30,14 @@ instance Show Term where
   show (TmAbs i typ trm) = concat ["(", "lam ", i, ":", "(", show typ, ").",
                                    show trm, ")"]
   show (TmApp trm1 trm2) = show trm1 ++ show trm2
-  show (TmUniAbs i trm) = concat ["(", "forall ", i, ".", show trm, ")"]
-  show (TmUniApp trm typ) = show trm ++ show typ
+  show (TmTAbs i trm) = concat ["(", "forall ", i, ".", show trm, ")"]
+  show (TmTApp trm typ) = show trm ++ show typ
 
 data Type = TyUnit
           | TyBool
           | TyVar Id
           | TyAbs Type Type
-          | TyUni Type Type
+          | TyTAbs Id Type
           deriving (Eq)
 
 -- For pretty printing types
@@ -49,7 +46,7 @@ instance Show Type where
   show (TyBool) = "Bool"
   show (TyVar i) = id i
   show (TyAbs typ1 typ2) = concat ["(", show typ1, " -> ", show typ2, ")"]
-  show (TyUni typ1 typ2) = concat ["(", show typ1, ".", show typ2, ")"]
+  show (TyTAbs i typ) = concat ["(", i, ".", show typ, ")"]
 
 
 {- =============================== Typing  =================================-}
@@ -64,8 +61,8 @@ data TCError = ErVar Id
              | ErTyVar Id
              | ErApp1 Term Term
              | ErApp2 Term
-             | ErUniApp1 Term Type
-             | ErUniApp2 Type
+             | ErTApp1 Term Type
+             | ErTApp2 Type
              deriving (Eq)
 
 -- For pretty printing errors
@@ -75,8 +72,10 @@ instance Show TCError where
   show (ErApp1 trm1 trm2) = concat [show trm2, " is not a valid input to ",
                                    show trm1, "."]
   show (ErApp2 trm) = concat [show trm, " must be an abstraction."]
-  show (ErUniApp1 trm typ) = concat [show typ, "is not a valid input to ",
+  show (ErTApp1 trm typ) = concat [show typ, "is not a valid input to ",
                                     show trm, "."]
+  show (ErTApp2 trm) = concat [show trm, " must be a type abstraction."]
+
 -- Extract id from a binding
 idFromBinding :: Binding -> Id
 idFromBinding (TmBind i _) = i
@@ -93,7 +92,7 @@ typeFromContext i [] = Left $ ErVar i
 typeFromContext i ctx = case ctx' of
   [] -> Left (ErVar i)
   _ -> typeFromBinding (head ctx')
-  where ctx' = filter (\x -> idFromBinding x == i) ctx
+  where ctx' = Prelude.filter (\x -> idFromBinding x == i) ctx
 
 -- Typecheck terms, with monadic error handling
 typeCheck :: Term -> Context -> Either TCError Type
@@ -112,3 +111,45 @@ typeCheck (TmApp trm1 trm2) ctx = do
       | typ11 == typ2 -> Right $ typ12
       | otherwise -> Left $ ErApp1 trm1 trm2
     _ -> Left $ ErApp2 trm1
+typeCheck (TmTAbs i trm) ctx = do
+  typ <- typeCheck trm ((TyBind i):ctx)
+  return (TyTAbs i typ)
+-- typeCheck (TmTApp trm typ) ctx = do
+--   typ' <- typeCheck trm ctx
+--   case typ' of
+--     (TyTAbs i typ) ->
+
+{- =============================== Evaluation  =================================-}
+
+-- Fresh variables for capture-avoiding substitution
+freshVars :: [Id]
+freshVars = genFresh (repeat "$x") [1..]
+
+genFresh :: [Id] -> [Int] -> [Id]
+genFresh (x:xs) (y:ys) = (x ++ (show y)) : genFresh xs ys
+
+
+-- State of environment is state of variable/term bindings + list of fresh vars
+type Env = (Map Id (Either Term Type), [Id])
+
+-- Evaluate terms, assuming well-typed
+eval :: Term -> Env -> Term
+eval (TmUnit) _ = TmUnit
+eval (TmTrue) _ = TmTrue
+eval (TmFalse) _ = TmFalse
+eval (TmVar i) (m, _) = trm where (Left trm) = m ! i
+eval (TmAbs i1 (TyVar i2) trm) (m, _) = TmAbs i1 typ trm where (Right typ) = m ! i2
+eval (TmAbs i typ trm) _ = TmAbs i typ trm
+eval (TmApp (TmAbs i typ trm1) trm2) (m, fvs@(i':is))
+  | Map.lookup i m == Nothing = eval trm1 (insert i (Left trm2) m, fvs)
+  | otherwise                 = eval trm1 (insert i' (Left trm2) m, is)
+eval (TmApp trm1 trm2) env =
+  let trm1' = eval trm1 env
+      trm2' = eval trm2 env
+  in eval (TmApp trm1' trm2') env
+eval (TmTApp (TmTAbs i trm) typ) (m, fvs@(i':is))
+  | Map.lookup i m == Nothing = eval trm (insert i (Right typ) m, fvs)
+  | otherwise                 = eval trm (insert i' (Right typ) m, is)
+eval (TmTApp trm typ) env =
+  let trm' = eval trm env
+  in eval (TmTApp trm' typ) env
