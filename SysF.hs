@@ -114,7 +114,7 @@ typeCheck (TmTAbs i trm) ctx = do
 typeCheck (TmTApp trm typ) ctx = do
   typ' <- typeCheck trm ctx
   case typ' of
-    (TyTAbs i typ) -> typeCheck (eval (TmTApp trm typ) (Map.empty, freshVars)) ctx
+    (TyTAbs i typ'') -> typeCheck (eval (TmTApp trm typ) (Map.empty, freshVars)) ctx
     otherwise -> Left $ ErTApp trm
 
 {- =============================== Evaluation  =================================-}
