@@ -1,8 +1,8 @@
 {-|
 SysF.hs
 =========
-Will define syntax for System F, what terms and types look like. Follows
-the specification in Chapter 23 of Pierce's Types and Programming Languages.
+Defines syntax, typing, evaluation for System F. Follows the specification in
+Chapter 23 of Pierce's Types and Programming Languages.
 -}
 
 import Control.Monad.State
