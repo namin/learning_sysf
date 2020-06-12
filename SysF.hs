@@ -136,7 +136,7 @@ eval (TmTrue) _ = TmTrue
 eval (TmFalse) _ = TmFalse
 eval (TmVar i) (m, _) = trm where (Left trm) = m ! i
 eval (TmAbs i1 (TyVar i2) trm) (m, _) = TmAbs i1 typ trm where (Right typ) = m ! i2
-eval (TmAbs i typ trm) _ = TmAbs i typ trm
+eval (TmAbs i typ trm) env = TmAbs i typ (eval trm env)
 eval (TmApp (TmAbs i typ trm1) trm2) (m, fvs@(i':is))
   | Map.lookup i m == Nothing = eval trm1 (insert i (Left trm2) m, fvs)
   | otherwise                 = eval trm1 (insert i' (Left trm2) m, is)
