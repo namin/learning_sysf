@@ -5,6 +5,8 @@ Defines syntax, typing, evaluation for System F. Follows the specification in
 Chapter 23 of Pierce's Types and Programming Languages.
 -}
 
+module SysF where
+
 import Data.Map as Map
 
 {- ====================== Syntax of Terms & Types  ==========================-}
@@ -22,13 +24,13 @@ data Term = TmUnit
 
 -- For pretty printing terms
 instance Show Term where
-  show (TmUnit) = "(unit)"
-  show (TmTrue) = "(true)"
-  show (TmFalse) = "(false)"
+  show (TmUnit) = "unit"
+  show (TmTrue) = "tt"
+  show (TmFalse) = "ff"
   show (TmVar i) = id i
   show (TmAbs i typ trm) = concat ["(", "lam ", i, ":", "(", show typ, ").",
                                    show trm, ")"]
-  show (TmApp trm1 trm2) = show trm1 ++ show trm2
+  show (TmApp trm1 trm2) = "(" ++ show trm1 ++ ")" ++ show trm2
   show (TmTAbs i trm) = concat ["(", "forall ", i, ".", show trm, ")"]
   show (TmTApp trm typ) = show trm ++ show typ
 
@@ -129,6 +131,16 @@ genFresh (x:xs) (y:ys) = (x ++ (show y)) : genFresh xs ys
 -- Environment holds term/type bindings + infinite list of fresh variables
 type Env = (Map Id (Either Term Type), [Id])
 
+subTerm :: Id -> Term -> Term -> Term
+subTerm x s (TmUnit) = TmUnit
+subTerm x s (TmTrue)= TmTrue
+subTerm x s (TmFalse) = TmFalse
+subTerm x s (TmVar i)
+  | x == i    = s
+  | otherwise = (TmVar i)
+
+
+
 -- Evaluate terms, assuming well-typed
 eval :: Term -> Env -> Term
 eval (TmUnit) _ = TmUnit
@@ -136,10 +148,10 @@ eval (TmTrue) _ = TmTrue
 eval (TmFalse) _ = TmFalse
 eval (TmVar i) (m, _) = trm where (Left trm) = m ! i
 eval (TmAbs i1 (TyVar i2) trm) (m, _) = TmAbs i1 typ trm where (Right typ) = m ! i2
-eval (TmAbs i typ trm) env = TmAbs i typ (eval trm env)
+eval (TmAbs i typ trm) env = TmAbs i typ trm
 eval (TmApp (TmAbs i typ trm1) trm2) (m, fvs@(i':is))
-  | Map.lookup i m == Nothing = eval trm1 (insert i (Left trm2) m, fvs)
-  | otherwise                 = eval trm1 (insert i' (Left trm2) m, is)
+  | Map.lookup i m == Nothing = eval trm1 (insert i (Left (eval trm2 (m,fvs))) m, fvs)
+  | otherwise                 = eval trm1 (insert i' (Left (eval trm2 (m,is))) m, is)
 eval (TmApp trm1 trm2) env =
   let trm1' = eval trm1 env
       trm2' = eval trm2 env
@@ -150,3 +162,14 @@ eval (TmTApp (TmTAbs i trm) typ) (m, fvs@(i':is))
 eval (TmTApp trm typ) env =
   let trm' = eval trm env
   in eval (TmTApp trm' typ) env
+
+evalType :: Type -> Env -> Type
+evalType (TyUnit) _ = TyUnit
+evalType (TyBool) _ = TyBool
+evalType (TyVar i) (m, _) = typ where (Right typ) = m ! i
+evalType (TyAbs typ1 typ2) env =
+  let typ1' = evalType typ1 env
+      typ2' = evalType typ2 env
+      in TyAbs typ1' typ2'
+evalType (TyTAbs i typ) env = TyTAbs i (evalType typ env)
+
