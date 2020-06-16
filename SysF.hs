@@ -222,7 +222,7 @@ subType x typ t@(TyTAbs i typ') fvs@(i':is)
   | x /= i && (not (Set.member i fvTyp)) = TyTAbs i (subType x typ typ' fvs)
   | x /= i && (Set.member i fvTyp)       = TyTAbs i' (subType x typ rtyp is)
   where fvTyp = freeTyVar typ
-        rtyp = replaceTyVar i i' t
+        rtyp = replaceTyVar i i' typ'
 
 -- Capture-avoiding substitution of types in terms
 subTypeTerm :: Id -> Type -> Term -> [Id] -> Term
@@ -256,3 +256,9 @@ eval trm@(TmTAbs _ _) _ = trm
 eval (TmTApp (TmTAbs i trm) typ) (_,fvs) = subTypeTerm i typ trm fvs
 eval (TmTApp trm typ) env = eval (TmTApp trm' typ) env
   where trm' = eval trm env
+
+
+{-
+(X.X->Y)[Y/X]
+Y.(X.X->Y)[X]
+-}
