@@ -36,8 +36,9 @@ genTyAbs ctx n =
 genTyTAbs :: Context -> Int -> [Type]
 genTyTAbs _ 0 = []
 genTyTAbs ctx n =
-  let typs = genITypes ((TyBind "X"):ctx) (n-1)
-      in [TyTAbs "X" typ | typ <- typs]
+  let tyvs = [i | (TyBind i) <- ctx]
+      typs = genITypes ctx (n-1)
+      in [TyTAbs i typ | i <- tyvs, typ <- typs]
 
 -- Generates all term variables at type
 genTmVars :: Type -> Context -> [Term]
@@ -54,8 +55,17 @@ genTmApps typ12 ctx n =
       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
       in [TmApp f x | (f,x) <- apps]
 
--- genTmTApps :: Type -> Context -> Int -> [Term]
--- genTmTApps typ ctx n = 
+-- Generates all type applications at type to some AST depth n
+genTmTApps :: Type -> Context -> Int -> [Term]
+genTmTApps typ ctx n =
+  let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
+      szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
+      fTyps = [t | TmBind i t@(TyTAbs i' typ') <- ctx]
+      fxs = [(genETerms typf ctx (fst sz), genITypes ctx (snd sz)) |
+             typf@(TyTAbs _ _) <- fTyps, sz <- szs]
+      tapps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
+      in [TmTApp f x | (f,x) <- tapps,
+                       typeCheck (TmTApp f x) ctx == Right typ]
 
 {-========================== Generator Functions =============================-}
 
@@ -88,13 +98,13 @@ genITerms typ@(TyAbs typ11 typ12) ctx n =
 genETypes :: Context -> Int -> [Type]
 genETypes _ 0 = []
 genETypes ctx 1 = (genTyVars ctx)
-genETypes ctx n = (genTyAbs ctx n) ++ (genTyTAbs ctx n)
+genETypes ctx n = []
 
 -- Generates all introduction types to some AST depth n
 genITypes :: Context -> Int -> [Type]
 genITypes _ 0 = []
 genITypes ctx 1 = [TyUnit, TyBool] ++ genETypes ctx 1
-genITypes ctx n = genETypes ctx n
+genITypes ctx n = (genTyAbs ctx n) ++ (genTyTAbs ctx n) ++ (genETypes ctx n)
 
 -- Generates all types to some AST depth n
 genTypes :: Context -> Int -> [Type]
