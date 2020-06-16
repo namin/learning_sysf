@@ -10,6 +10,7 @@ module SysF where
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
+
 {- ====================== Syntax of Terms & Types  ==========================-}
 type Id = String
 
@@ -33,7 +34,7 @@ instance Show Term where
                                    show trm, ")"]
   show (TmApp trm1 trm2) = "(" ++ show trm1 ++ ")" ++ show trm2
   show (TmTAbs i trm) = concat ["(", "forall ", i, ".", show trm, ")"]
-  show (TmTApp trm typ) = show trm ++ show typ
+  show (TmTApp trm typ) = "(" ++ show trm ++ ")" ++ show typ
 
 data Type = TyUnit
           | TyBool
@@ -52,6 +53,7 @@ instance Show Type where
 
 
 {- =============================== Typing  =================================-}
+
 data Binding = TmBind Id Type
              | TyBind Id
              deriving (Eq, Show)
@@ -118,6 +120,7 @@ typeCheck (TmTApp trm typ) ctx = do
   case typ' of
     (TyTAbs i typ'') -> Right $ subType i typ typ'' freshTyVars
     _                -> Left $ ErTApp trm
+
 
 {- =============================== Evaluation  =================================-}
 
