@@ -256,9 +256,3 @@ eval trm@(TmTAbs _ _) _ = trm
 eval (TmTApp (TmTAbs i trm) typ) (_,fvs) = subTypeTerm i typ trm fvs
 eval (TmTApp trm typ) env = eval (TmTApp trm' typ) env
   where trm' = eval trm env
-
-
-{-
-(X.X->Y)[Y/X]
-Y.(X.X->Y)[X]
--}
