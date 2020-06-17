@@ -73,13 +73,17 @@ genTmTApps typ ctx n =
 genETerms :: Type -> Context -> Int -> [Term]
 genETerms _ _ 0 = []
 genETerms (TyUnit) ctx 1 = genTmVars TyUnit ctx
-genETerms (TyUnit) ctx n = genTmApps TyUnit ctx n
+genETerms (TyUnit) ctx n = (genTmApps TyUnit ctx n) ++
+                           (genTmTApps TyUnit ctx n)
 genETerms (TyBool) ctx 1 = genTmVars TyBool ctx
-genETerms (TyBool) ctx n = genTmApps TyBool ctx n
+genETerms (TyBool) ctx n = (genTmApps TyBool ctx n) ++
+                           (genTmTApps TyBool ctx n)
 genETerms typ@(TyAbs _ _) ctx 1 = genTmVars typ ctx
-genETerms typ@(TyAbs _ _) ctx n = genTmApps typ ctx n
+genETerms typ@(TyAbs _ _) ctx n = (genTmApps typ ctx n) ++
+                                  (genTmTApps typ ctx n)
 genETerms typ@(TyTAbs _ _) ctx 1 = genTmVars typ ctx
-genETerms typ@(TyTAbs _ _) ctx n = genTmApps typ ctx n
+genETerms typ@(TyTAbs _ _) ctx n = (genTmApps typ ctx n) ++
+                                   (genTmTApps typ ctx n)
 
 -- Generates all introduction terms at type to some AST depth n
 genITerms :: Type -> Context -> Int -> [Term]
@@ -93,6 +97,10 @@ genITerms typ@(TyAbs typ11 typ12) ctx n =
   let sz = sizeType typ11
       tms = genITerms typ12 ((TmBind "x" typ11):ctx) (n-sz-1)
       in [TmAbs "x" typ11 tm | tm <- tms] ++ (genETerms typ ctx n)
+genITerms typ@(TyTAbs _ _) ctx 1 = genETerms typ ctx 1
+genITerms typ@(TyTAbs i typ') ctx n =
+  let tms = genITerms typ' ((TyBind i):ctx) (n-1)
+      in [TmTAbs i tm | tm <- tms] ++ (genETerms typ ctx n)
 
 -- Generates all elimination types to some AST depth n
 genETypes :: Context -> Int -> [Type]
