@@ -78,6 +78,9 @@ genETerms (TyUnit) ctx n = (genTmApps TyUnit ctx n) ++
 genETerms (TyBool) ctx 1 = genTmVars TyBool ctx
 genETerms (TyBool) ctx n = (genTmApps TyBool ctx n) ++
                            (genTmTApps TyBool ctx n)
+genETerms (TyVar i) ctx 1 = genTmVars (TyVar i) ctx
+genETerms (TyVar i) ctx n = (genTmApps (TyVar i) ctx n) ++
+                            (genTmTApps (TyVar i) ctx n)
 genETerms typ@(TyAbs _ _) ctx 1 = genTmVars typ ctx
 genETerms typ@(TyAbs _ _) ctx n = (genTmApps typ ctx n) ++
                                   (genTmTApps typ ctx n)
@@ -92,6 +95,7 @@ genITerms (TyUnit) ctx 1 = [TmUnit] ++ (genETerms TyUnit ctx 1)
 genITerms (TyUnit) ctx n = genETerms TyUnit ctx n
 genITerms (TyBool) ctx 1 = [TmTrue, TmFalse] ++ (genETerms TyBool ctx 1)
 genITerms (TyBool) ctx n = genETerms TyBool ctx n
+genITerms (TyVar i) ctx n = genETerms (TyVar i) ctx n
 genITerms typ@(TyAbs typ11 typ12) ctx 1 = genETerms typ ctx 1
 genITerms typ@(TyAbs typ11 typ12) ctx n =
   let sz = sizeType typ11
