@@ -1,15 +1,29 @@
 {-|
 Gen.hs
-=========
-Defines synthesis rules from types and examples. Guided in part by
-Chapter 9 of Peter-Michael Osera's thesis, "Program Synthesis with Types".
+==============================================================================
+Defines synthesis rules from types and examples. Follows the specification in
+Chapter 3 and 4 of "Learning in System F".
 -}
 
 module Gen where
 
 import SysF
 
-{-============================= Helper Functions =============================-}
+-- Examples are lists of tuples
+data Example = Out Term
+             | In Term Example
+
+type Examples = [Example]
+
+projL :: Example -> Term
+projL (Out t) = t
+projL (In t _) = t
+
+projR :: Example -> Maybe Example
+projR (Out _) = Nothing
+projR (In _ e) = Just e
+
+{-========================= Generators from Type =============================-}
 
 -- Calculates size of a type's AST
 sizeType :: Type -> Int
@@ -67,8 +81,6 @@ genTmTApps typ ctx n =
       in [TmTApp f x | (f,x) <- tapps,
                        typeCheck (TmTApp f x) ctx == Right typ]
 
-{-========================== Generator Functions =============================-}
-
 -- Generates all elimination terms at type to some AST depth n
 genETerms :: Type -> Context -> Int -> [Term]
 genETerms _ _ 0 = []
@@ -98,9 +110,10 @@ genITerms (TyBool) ctx n = genETerms TyBool ctx n
 genITerms (TyVar i) ctx n = genETerms (TyVar i) ctx n
 genITerms typ@(TyAbs typ11 typ12) ctx 1 = genETerms typ ctx 1
 genITerms typ@(TyAbs typ11 typ12) ctx n =
-  let sz = sizeType typ11
-      tms = genITerms typ12 ((TmBind "x" typ11):ctx) (n-sz-1)
-      in [TmAbs "x" typ11 tm | tm <- tms] ++ (genETerms typ ctx n)
+  let i = "x" ++ (show n)
+      sz = sizeType typ11
+      tms = genITerms typ12 ((TmBind i typ11):ctx) (n-sz-1)
+      in [TmAbs i typ11 tm | tm <- tms] ++ (genETerms typ ctx n)
 genITerms typ@(TyTAbs _ _) ctx 1 = genETerms typ ctx 1
 genITerms typ@(TyTAbs i typ') ctx n =
   let tms = genITerms typ' ((TyBind i):ctx) (n-1)
@@ -125,3 +138,6 @@ genTypes ctx n = foldl (++) [] [genITypes ctx n' | n' <- [0..n]]
 -- Generates all terms to some AST depth n
 genTerms :: Type -> Context -> Int -> [Term]
 genTerms typ ctx n = foldl (++) [] [genITerms typ ctx n' | n' <- [0..n]]
+
+
+{-================== Generators from Type & Examples =========================-}
