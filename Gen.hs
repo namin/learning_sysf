@@ -9,19 +9,6 @@ module Gen where
 
 import SysF
 
--- Examples are lists of tuples
-data Example = Out Term
-             | In Term Example
-
-type Examples = [Example]
-
-projL :: Example -> Term
-projL (Out t) = t
-projL (In t _) = t
-
-projR :: Example -> Maybe Example
-projR (Out _) = Nothing
-projR (In _ e) = Just e
 
 {-========================= Generators from Type =============================-}
 
@@ -139,5 +126,43 @@ genTypes ctx n = foldl (++) [] [genITypes ctx n' | n' <- [0..n]]
 genTerms :: Type -> Context -> Int -> [Term]
 genTerms typ ctx n = foldl (++) [] [genITerms typ ctx n' | n' <- [0..n]]
 
+
+{-=============================== Examples ===================================-}
+
+-- Examples are lists of tuples
+data Example = Out Term
+             | In Term Example
+             deriving (Eq)
+
+type Examples = [Example]
+
+-- Pretty printing examples as tuples
+instance Show Example where
+  show e =
+    let show' (Out t) = show t
+        show' (In t e) = show t ++ "," ++ show' e
+        in "<" ++ show' e ++ ">"
+
+-- Projections for examples
+projL :: Example -> Term
+projL (Out t) = t
+projL (In t _) = t
+
+projR :: Example -> Maybe Example
+projR (Out _) = Nothing
+projR (In _ e) = Just e
+
+-- Beta equality of terms
+betaEqualTm :: Term -> Term -> [Id] -> Bool
+betaEqualTm trm1@(TmAbs x1 typ1 _) trm2@(TmAbs x2 typ2 _) (i:is)
+  | typ1 /= typ2 = False
+  | otherwise = let (TmAbs _ _ trm1') = replaceTmVar x1 i trm1
+                    (TmAbs _ _ trm2') = replaceTmVar x2 i trm2
+                    in betaEqualTm trm1' trm2' is
+betaEqualTm (TmTAbs x1 trm1) (TmTAbs x2 trm2) fvs@(i:is) =
+  let trm1' = subTypeTerm x1 (TyVar i) trm1 fvs
+      trm2' = subTypeTerm x2 (TyVar i) trm2 fvs
+      in betaEqualTm trm1' trm2' is
+betaEqualTm trm1 trm2 _ = trm1 == trm2
 
 {-================== Generators from Type & Examples =========================-}
