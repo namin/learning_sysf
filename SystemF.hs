@@ -1,11 +1,11 @@
 {-|
-SysF.hs
+SystemF.hs
 ==============================================================================
 Defines syntax, typing, evaluation for System F. Follows the specification in
 Chapter 2 of "Learning in System F".
 -}
 
-module SysF where
+module SystemF where
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set

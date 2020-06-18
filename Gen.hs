@@ -5,9 +5,9 @@ Defines synthesis rules from types and examples. Follows the specification in
 Chapter 3 and 4 of "Learning in System F".
 -}
 
-module Gen where
+module Learning where
 
-import SysF
+import SystemF
 
 
 {-========================= Generators from Type =============================-}
