@@ -166,16 +166,9 @@ betaEqualTm (TmTAbs x1 trm1) (TmTAbs x2 trm2) fvs@(i:is) =
       in betaEqualTm trm1' trm2' is
 betaEqualTm trm1 trm2 _ = trm1 == trm2
 
--- Check whether examples describe a term's behavior
--- checkEx :: Term -> Example -> Bool
--- checkEx trm1 (Out trm2) = eval trm1 == trm2
--- checkEx trm1 (In trm2 exs) = 
 
 {-================== Generators from Type & Examples =========================-}
 
 -- lrnNaive :: Type -> Examples -> Context -> Int -> [Term]
 -- lrnNaive typ [] ctx n = genTerms typ ctx n
 -- lrnNaive typ exs ctx n =
---   let tms = genTerms typ ctx n
---   in
-    
