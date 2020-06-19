@@ -135,8 +135,6 @@ data Example = Out Term
              | In Term Example
              deriving (Eq)
 
-type Examples = [Example]
-
 -- Pretty printing examples as tuples
 instance Show Example where
   show e =
@@ -152,6 +150,11 @@ projL (In t _) = t
 projR :: Example -> Maybe Example
 projR (Out _) = Nothing
 projR (In _ e) = Just e
+
+-- Example length
+lenExample :: Example -> Int
+lenExample (Out trm) = 1
+lenExample (In trm ex) = 1 + lenExample ex
 
 -- Beta equality of terms
 betaEqualTm :: Term -> Term -> [Id] -> Bool
@@ -169,6 +172,12 @@ betaEqualTm trm1 trm2 _ = trm1 == trm2
 
 {-================== Generators from Type & Examples =========================-}
 
--- lrnNaive :: Type -> Examples -> Context -> Int -> [Term]
--- lrnNaive typ [] ctx n = genTerms typ ctx n
--- lrnNaive typ exs ctx n =
+lrnTerms :: Type -> [Example] -> Context  -> [Term] -> Int -> [Term]
+lrnTerms typ exs ctx ltrms 0 = []
+lrnTerms typ exs ctx [] n = lrnTerms typ exs ctx [(TmVar "#HOLE")] n
+lrnTerms typ exs@((Out _):_) ctx ltrms n = ltrms
+lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
+  let i = "x" ++ show n
+      ltrms' = [TmApp (TmAbs i typ1 tm1) tm2 | tm1 <- ltrms, (In tm2 ex) <- exs]
+      exs'   = [ex | (In _ ex) <- exs]
+      in lrnTerms typ2 exs' ctx ltrms' (n-1)
