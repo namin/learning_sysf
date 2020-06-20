@@ -171,6 +171,25 @@ betaEqualTm trm1 trm2 _ = trm1 == trm2
 
 
 {-================== Generators from Type & Examples =========================-}
+
+-- "Bad" substitution, i.e. not capture-avoiding. Necessary to fill holes. 
+badSubTm :: Id -> Term -> Term -> Term
+badSubTm x trm (TmUnit) = TmUnit
+badSubTm x trm (TmTrue) = TmTrue
+badSubTm x trm (TmFalse) = TmFalse
+badSubTm x trm (TmVar i)
+  | x == i    = trm
+  | otherwise = TmVar i
+badSubTm x trm (TmAbs i typ trm') = (TmAbs i typ rtrm)
+  where rtrm = badSubTm x trm trm'
+badSubTm x trm (TmApp trm1 trm2) = (TmApp trm1' trm2')
+  where trm1' = badSubTm x trm trm1
+        trm2' = badSubTm x trm trm2
+badSubTm x trm (TmTAbs i trm') = (TmTAbs i rtrm)
+  where rtrm = badSubTm x trm trm'
+badSubTm x trm (TmTApp trm' typ) = (TmTApp rtrm typ)
+  where rtrm = badSubTm x trm trm'
+
 extractAbs :: Term -> Term
 extractAbs (TmApp trm1@(TmAbs _ _ _) trm2) = trm1
 extractAbs (TmApp trm1 trm2) = extractAbs trm1
@@ -181,9 +200,6 @@ extractCtx (TmAbs i typ trm) = [TmBind i typ] ++ (extractCtx trm)
 extractCtx (TmApp trm1 trm2) = (extractCtx trm1) ++ (extractCtx trm2)
 extractCtx trm = []
 
-{-
-write function which takes a list of completed terms and checks against out
--}
 checkEx :: [Term] -> [Term] -> Bool
 checkEx trms outs =
   let trmouts = zip trms outs
@@ -198,9 +214,9 @@ lrnTerms typ exs ctx [] n =
       in lrnTerms typ exs ctx holes n
 lrnTerms typ exs@((Out _):_) ctx ltrms n =
   let ctx' = (extractCtx (extractAbs (ltrms !! 0))) ++ ctx
-      htrms = genITerms typ ctx' n
-      ltrms' = [[subTerm "$HOLE" htrm ltrm freshTmVars | ltrm <- ltrms] |
-                                                         htrm <- htrms]
+      htrms = genTerms typ ctx' n
+      ltrms' = [[badSubTm "$HOLE" htrm ltrm | ltrm <- ltrms] |
+                                              htrm <- htrms]
       otrms = [trm | (Out trm) <- exs]
       in [extractAbs trm | t@(trm:trms) <- ltrms', checkEx t otrms]
 lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
