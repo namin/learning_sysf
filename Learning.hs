@@ -171,13 +171,31 @@ betaEqualTm trm1 trm2 _ = trm1 == trm2
 
 
 {-================== Generators from Type & Examples =========================-}
+extractAbs :: Term -> Term
+extractAbs (TmApp trm1@(TmAbs _ _ _) trm2) = trm1
+extractAbs (TmApp trm1 trm2) = extractAbs trm1
+extractAbs trm = trm
+
+extractCtx :: Term -> Context
+extractCtx (TmAbs i typ trm) = [TmBind i typ] ++ (extractCtx trm)
+extractCtx (TmApp trm1 trm2) = (extractCtx trm1) ++ (extractCtx trm2)
+extractCtx trm = []
 
 lrnTerms :: Type -> [Example] -> Context  -> [Term] -> Int -> [Term]
 lrnTerms typ exs ctx ltrms 0 = []
-lrnTerms typ exs ctx [] n = lrnTerms typ exs ctx [(TmVar "#HOLE")] n
-lrnTerms typ exs@((Out _):_) ctx ltrms n = ltrms
+lrnTerms typ exs ctx [] n =
+  let holes = replicate n (TmVar "$HOLES")
+      in lrnTerms typ exs ctx holes n
+lrnTerms typ exs@((Out _):_) ctx ltrms n =
+  let ctx' = (extractCtx (extractAbs (ltrms !! 0))) ++ ctx
+      tms = genITerms typ ctx' n
+      ltrms' = [subTerm "$HOLE" strm ltrm freshTmVars | strm <- tms,
+                                                        ltrm <- ltrms]
+      in ltrms
 lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
   let i = "x" ++ show n
-      ltrms' = [TmApp (TmAbs i typ1 tm1) tm2 | tm1 <- ltrms, (In tm2 ex) <- exs]
-      exs'   = [ex | (In _ ex) <- exs]
-      in lrnTerms typ2 exs' ctx ltrms' (n-1)
+      strm = TmAbs i typ1 (TmVar "$HOLE")
+      ltrms' = [subTerm "$HOLE" strm ltrm freshTmVars | ltrm <- ltrms]
+      ltrms'' = [TmApp ltrm tm2 | ltrm <- ltrms', (In tm2 _) <- exs]
+      exs' = [ex | (In _ ex) <- exs]
+      in lrnTerms typ2 exs' ctx ltrms'' (n-1)
