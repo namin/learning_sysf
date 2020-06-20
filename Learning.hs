@@ -214,7 +214,7 @@ lrnTerms typ exs ctx [] n =
       in lrnTerms typ exs ctx holes n
 lrnTerms typ exs@((Out _):_) ctx ltrms n =
   let ctx' = (extractCtx (extractAbs (ltrms !! 0))) ++ ctx
-      htrms = genTerms typ ctx' n
+      htrms = genITerms typ ctx' n
       ltrms' = [[badSubTm "$HOLE" htrm ltrm | ltrm <- ltrms] |
                                               htrm <- htrms]
       otrms = [trm | (Out trm) <- exs]
@@ -226,5 +226,6 @@ lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
       itrms = [trm | (In trm _) <- exs]
       ltrms' = zipWith TmApp ftrms itrms
       exs' = [ex | (In _ ex) <- exs]
-      in lrnTerms typ2 exs' ctx ltrms' (n-1)
+      sztyp = sizeType typ1
+      in lrnTerms typ2 exs' ctx ltrms' (n-1-sztyp)
 
