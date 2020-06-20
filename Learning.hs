@@ -181,21 +181,34 @@ extractCtx (TmAbs i typ trm) = [TmBind i typ] ++ (extractCtx trm)
 extractCtx (TmApp trm1 trm2) = (extractCtx trm1) ++ (extractCtx trm2)
 extractCtx trm = []
 
+{-
+write function which takes a list of completed terms and checks against out
+-}
+checkEx :: [Term] -> [Term] -> Bool
+checkEx trms outs =
+  let trmouts = zip trms outs
+      fvs = freshTmVars
+      env = (Map.empty, fvs)
+      in all (\(trm,out) -> betaEqualTm (eval trm env) out fvs) trmouts
+
 lrnTerms :: Type -> [Example] -> Context  -> [Term] -> Int -> [Term]
 lrnTerms typ exs ctx ltrms 0 = []
 lrnTerms typ exs ctx [] n =
-  let holes = replicate n (TmVar "$HOLES")
+  let holes = replicate (length exs) (TmVar "$HOLE")
       in lrnTerms typ exs ctx holes n
 lrnTerms typ exs@((Out _):_) ctx ltrms n =
   let ctx' = (extractCtx (extractAbs (ltrms !! 0))) ++ ctx
-      tms = genITerms typ ctx' n
-      ltrms' = [subTerm "$HOLE" strm ltrm freshTmVars | strm <- tms,
-                                                        ltrm <- ltrms]
-      in ltrms
+      htrms = genITerms typ ctx' n
+      ltrms' = [[subTerm "$HOLE" htrm ltrm freshTmVars | ltrm <- ltrms] |
+                                                         htrm <- htrms]
+      otrms = [trm | (Out trm) <- exs]
+      in [extractAbs trm | t@(trm:trms) <- ltrms', checkEx t otrms]
 lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
   let i = "x" ++ show n
       strm = TmAbs i typ1 (TmVar "$HOLE")
-      ltrms' = [subTerm "$HOLE" strm ltrm freshTmVars | ltrm <- ltrms]
-      ltrms'' = [TmApp ltrm tm2 | ltrm <- ltrms', (In tm2 _) <- exs]
+      ftrms = [subTerm "$HOLE" strm ltrm freshTmVars | ltrm <- ltrms]
+      itrms = [trm | (In trm _) <- exs]
+      ltrms' = zipWith TmApp ftrms itrms
       exs' = [ex | (In _ ex) <- exs]
-      in lrnTerms typ2 exs' ctx ltrms'' (n-1)
+      in lrnTerms typ2 exs' ctx ltrms' (n-1)
+
