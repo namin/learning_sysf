@@ -201,7 +201,7 @@ subTerm x trm (TmVar i) _
 subTerm x trm t@(TmAbs i typ trm') fvs@(i':is)
   | x == i                               = t
   | x /= i && (not (Set.member i fvTrm)) = TmAbs i typ (subTerm x trm trm' fvs)
-  | x /= i && (Set.member i fvTrm)       = TmAbs i' typ (subTerm x trm rtrm is)
+  | x /= i && (Set.member i fvTrm)       = (subTerm x trm rtrm is)
   where fvTrm = freeTmVar trm
         rtrm  = replaceTmVar i i' t
 subTerm x trm (TmApp trm1 trm2) fvs = TmApp trm1' trm2'
