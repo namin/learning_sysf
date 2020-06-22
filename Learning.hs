@@ -132,29 +132,23 @@ genTerms typ ctx n = foldl (++) [] [genITerms typ ctx n' | n' <- [0..n]]
 
 -- Examples are lists of tuples
 data Example = Out Term
-             | In Term Example
+             | InTm Term Example
+             | InTy Type Example
              deriving (Eq)
 
 -- Pretty printing examples as tuples
 instance Show Example where
   show e =
     let show' (Out t) = show t
-        show' (In t e) = show t ++ "," ++ show' e
+        show' (InTm t e) = show t ++ "," ++ show' e
+        show' (InTy t e) = show t ++ "," ++ show' e
         in "<" ++ show' e ++ ">"
-
--- Projections for examples
-projL :: Example -> Term
-projL (Out t) = t
-projL (In t _) = t
-
-projR :: Example -> Maybe Example
-projR (Out _) = Nothing
-projR (In _ e) = Just e
 
 -- Example length
 lenExample :: Example -> Int
 lenExample (Out trm) = 1
-lenExample (In trm ex) = 1 + lenExample ex
+lenExample (InTm trm ex) = 1 + lenExample ex
+lenExample (InTy typ ex) = 1 + lenExample ex
 
 -- Beta equality of terms
 betaEqualTm :: Term -> Term -> [Id] -> Bool
@@ -193,11 +187,14 @@ badSubTm x trm (TmTApp trm' typ) = (TmTApp rtrm typ)
 extractAbs :: Term -> Term
 extractAbs (TmApp trm1@(TmAbs _ _ _) trm2) = trm1
 extractAbs (TmApp trm1 trm2) = extractAbs trm1
-extractAbs trm = trm
+extractAbs (TmTApp trm@(TmTAbs _ _) typ) = trm
+extractAbs (TmTApp trm typ) = extractAbs trm
 
 extractCtx :: Term -> Context
 extractCtx (TmAbs i typ trm) = [TmBind i typ] ++ (extractCtx trm)
 extractCtx (TmApp trm1 trm2) = (extractCtx trm1) ++ (extractCtx trm2)
+extractCtx (TmTAbs i trm) = [TyBind i] ++ (extractCtx trm)
+extractCtx (TmTApp trm typ) = extractCtx trm
 extractCtx trm = []
 
 checkEx :: [Term] -> [Term] -> Bool
@@ -219,13 +216,20 @@ lrnTerms typ exs@((Out _):_) ctx ltrms n =
                                               htrm <- htrms]
       otrms = [trm | (Out trm) <- exs]
       in [extractAbs trm | t@(trm:trms) <- ltrms', checkEx t otrms]
-lrnTerms (TyAbs typ1 typ2) exs@((In _ _):_) ctx ltrms n =
+lrnTerms (TyAbs typ1 typ2) exs@((InTm _ _):_) ctx ltrms n =
   let i = "x" ++ show n
       strm = TmAbs i typ1 (TmVar "$HOLE")
       ftrms = [subTerm "$HOLE" strm ltrm freshTmVars | ltrm <- ltrms]
-      itrms = [trm | (In trm _) <- exs]
+      itrms = [trm | (InTm trm _) <- exs]
       ltrms' = zipWith TmApp ftrms itrms
-      exs' = [ex | (In _ ex) <- exs]
+      exs' = [ex | (InTm _ ex) <- exs]
       sztyp = sizeType typ1
       in lrnTerms typ2 exs' ctx ltrms' (n-1-sztyp)
+lrnTerms (TyTAbs i typ) exs@((InTy _ _):_) ctx ltrms n =
+  let strm = TmTAbs i (TmVar "$HOLE")
+      ftrms = [subTerm "$HOLE" strm ltrm freshTmVars | ltrm <- ltrms]
+      ityps = [typ | (InTy typ _) <- exs]
+      ltrms' = zipWith TmTApp ftrms ityps
+      exs' = [ex | (InTy _ ex) <- exs]
+      in lrnTerms typ exs' ctx ltrms' (n-1)
 
