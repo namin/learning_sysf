@@ -9,6 +9,7 @@ module Learning where
 
 import SystemF
 import qualified Data.Map as Map
+import qualified Data.List as List
 
 
 {-========================= Generators from Type =============================-}
@@ -46,16 +47,48 @@ genTyTAbs ctx n =
 genTmVars :: Type -> Context -> [Term]
 genTmVars typ ctx = [TmVar i | (TmBind i typ') <- ctx, typ' == typ]
 
+-- -- Generates all term applications at type to some AST depth n
+-- genTmApps :: Type -> Context -> Int -> [Term]
+-- genTmApps typ12 ctx n =
+--   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
+--       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
+--       fTyps = [t | TmBind _ t@(TyAbs _ typ12') <- ctx, typ12' == typ12]
+--       fxs = [(genETerms typ ctx (fst sz), genITerms typ11' ctx (snd sz)) |
+--              typ@(TyAbs typ11' _) <- fTyps, sz <- szs]
+--       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
+--       in [TmApp f x | (f,x) <- apps]
+
+
+{-
+With the context, we know all possible τ₁ -> τ₂, where τ₂ are the apps we want
+
+extractFTo
+use on context to get all Fs to τ₂
+-}
+
+extractFTo :: Type -> Type -> [Type]
+extractFTo typ t@(TyAbs typ1 typ2)
+  | typ == typ2 = [t]
+  | otherwise   = extractFTo typ typ2
+extractFTo typ typ' = []
+
+extractFsTo :: Type -> Context -> [Type]
+extractFsTo typ ctx =
+  let ftyps = [t | TmBind _ t@(TyAbs _ _) <- ctx]
+      ftyps' = List.nub (concat [extractFTo typ ftyp | ftyp <- ftyps])
+      in ftyps'
+
 -- Generates all term applications at type to some AST depth n
 genTmApps :: Type -> Context -> Int -> [Term]
 genTmApps typ12 ctx n =
   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
-      fTyps = [t | TmBind _ t@(TyAbs _ typ12') <- ctx, typ12' == typ12]
+      fTyps = extractFsTo typ12 ctx
       fxs = [(genETerms typ ctx (fst sz), genITerms typ11' ctx (snd sz)) |
-             typ@(TyAbs typ11' _) <- fTyps, sz <- szs]
+             typ@(TyAbs typ11' typ12') <- fTyps, sz <- szs]
       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
       in [TmApp f x | (f,x) <- apps]
+
 
 -- Generates all type applications at type to some AST depth n
 genTmTApps :: Type -> Context -> Int -> [Term]
@@ -166,7 +199,7 @@ betaEqualTm trm1 trm2 _ = trm1 == trm2
 
 {-================== Generators from Type & Examples =========================-}
 
--- "Bad" substitution, i.e. not capture-avoiding. Necessary to fill holes. 
+-- "Bad" substitution, i.e. not capture-avoiding. Necessary to fill holes.
 badSubTm :: Id -> Term -> Term -> Term
 badSubTm x trm (TmUnit) = TmUnit
 badSubTm x trm (TmTrue) = TmTrue
