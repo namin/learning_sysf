@@ -67,6 +67,7 @@ use on context to get all Fs to τ₂
 -}
 
 extractFTo :: Type -> Type -> [Type]
+extractFTo typ t@(TyTAbs i typ') = extractFTo typ typ'
 extractFTo typ t@(TyAbs typ1 typ2)
   | typ == typ2 = [t]
   | otherwise   = extractFTo typ typ2
@@ -74,8 +75,19 @@ extractFTo typ typ' = []
 
 extractFsTo :: Type -> Context -> [Type]
 extractFsTo typ ctx =
+  let ftyps = List.nub (concat [extractFTo typ ftyp | (TmBind _ ftyp) <- ctx])
+      in ftyps
+
+extractTFTo :: Type -> Type -> [Type]
+extractTFTo typ t@(TyTAbs i typ')
+  | typ == typ' = [t]
+  | otherwise   = extractTFTo typ typ'
+extractTFTo typ typ' = []
+
+extractTFsTo :: Type -> Context -> [Type]
+extractTFsTo typ ctx =
   let ftyps = [t | TmBind _ t@(TyAbs _ _) <- ctx]
-      ftyps' = List.nub (concat [extractFTo typ ftyp | ftyp <- ftyps])
+      ftyps' = List.nub (concat [extractTFTo typ ftyp | ftyp <- ftyps])
       in ftyps'
 
 -- Generates all term applications at type to some AST depth n
@@ -89,13 +101,19 @@ genTmApps typ12 ctx n =
       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
       in [TmApp f x | (f,x) <- apps]
 
+{-
+TODO:
+-- Multiple apps mix with single tapp... now do multiple tapps mix with multiple apps?
+
+-}
 
 -- Generates all type applications at type to some AST depth n
 genTmTApps :: Type -> Context -> Int -> [Term]
 genTmTApps typ ctx n =
   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
-      fTyps = [t | TmBind i t@(TyTAbs i' typ') <- ctx]
+      fTyps = [t | TmBind i t@(TyTAbs _ _) <- ctx]
+      -- fTyps = extractTFsTo typ ctx
       fxs = [(genETerms typf ctx (fst sz), genITypes ctx (snd sz)) |
              typf@(TyTAbs _ _) <- fTyps, sz <- szs]
       tapps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
