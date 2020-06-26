@@ -47,65 +47,31 @@ genTyTAbs ctx n =
 genTmVars :: Type -> Context -> [Term]
 genTmVars typ ctx = [TmVar i | (TmBind i typ') <- ctx, typ' == typ]
 
--- -- Generates all term applications at type to some AST depth n
--- genTmApps :: Type -> Context -> Int -> [Term]
--- genTmApps typ12 ctx n =
---   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
---       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
---       fTyps = [t | TmBind _ t@(TyAbs _ typ12') <- ctx, typ12' == typ12]
---       fxs = [(genETerms typ ctx (fst sz), genITerms typ11' ctx (snd sz)) |
---              typ@(TyAbs typ11' _) <- fTyps, sz <- szs]
---       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
---       in [TmApp f x | (f,x) <- apps]
-
-
-{-
-With the context, we know all possible τ₁ -> τ₂, where τ₂ are the apps we want
-
-extractFTo
-use on context to get all Fs to τ₂
--}
-
-extractFTo :: Type -> Type -> [Type]
-extractFTo typ t@(TyTAbs i typ') = extractFTo typ typ'
-extractFTo typ t@(TyAbs typ1 typ2)
+extractFTo :: Type -> Type -> Context -> Int -> [Type]
+-- extractFTo typ t@(TyTAbs i typ') ctx n =
+--   let styps = genITypes ctx 1
+--       rtyps = [subType i styp typ' freshTyVars | styp <- styps]
+--       in concat [extractFTo typ rtyp ctx n | rtyp <- rtyps]
+extractFTo typ t@(TyAbs typ1 typ2) ctx n
   | typ == typ2 = [t]
-  | otherwise   = extractFTo typ typ2
-extractFTo typ typ' = []
+  | otherwise   = extractFTo typ typ2 ctx n
+extractFTo typ typ' ctx n = []
 
-extractFsTo :: Type -> Context -> [Type]
-extractFsTo typ ctx =
-  let ftyps = List.nub (concat [extractFTo typ ftyp | (TmBind _ ftyp) <- ctx])
+extractFsTo :: Type -> Context -> Int -> [Type]
+extractFsTo typ ctx n =
+  let ftyps = List.nub (concat [extractFTo typ ftyp ctx n | (TmBind _ ftyp) <- ctx])
       in ftyps
-
-extractTFTo :: Type -> Type -> [Type]
-extractTFTo typ t@(TyTAbs i typ')
-  | typ == typ' = [t]
-  | otherwise   = extractTFTo typ typ'
-extractTFTo typ typ' = []
-
-extractTFsTo :: Type -> Context -> [Type]
-extractTFsTo typ ctx =
-  let ftyps = [t | TmBind _ t@(TyAbs _ _) <- ctx]
-      ftyps' = List.nub (concat [extractTFTo typ ftyp | ftyp <- ftyps])
-      in ftyps'
 
 -- Generates all term applications at type to some AST depth n
 genTmApps :: Type -> Context -> Int -> [Term]
 genTmApps typ12 ctx n =
   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
-      fTyps = extractFsTo typ12 ctx
       fxs = [(genETerms typ ctx (fst sz), genITerms typ11' ctx (snd sz)) |
-             typ@(TyAbs typ11' typ12') <- fTyps, sz <- szs]
+             sz <- szs,
+             typ@(TyAbs typ11' _) <- extractFsTo typ12 ctx (fst sz)]
       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
       in [TmApp f x | (f,x) <- apps]
-
-{-
-TODO:
--- Multiple apps mix with single tapp... now do multiple tapps mix with multiple apps?
-
--}
 
 -- Generates all type applications at type to some AST depth n
 genTmTApps :: Type -> Context -> Int -> [Term]
@@ -113,7 +79,6 @@ genTmTApps typ ctx n =
   let cartProd xs ys = [(x,y) | x <- xs, y <- ys]
       szs = [(n1, n - 1 - n1) | n1 <- [1..(n-1)]]
       fTyps = [t | TmBind i t@(TyTAbs _ _) <- ctx]
-      -- fTyps = extractTFsTo typ ctx
       fxs = [(genETerms typf ctx (fst sz), genITypes ctx (snd sz)) |
              typf@(TyTAbs _ _) <- fTyps, sz <- szs]
       tapps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
@@ -235,12 +200,14 @@ badSubTm x trm (TmTAbs i trm') = (TmTAbs i rtrm)
 badSubTm x trm (TmTApp trm' typ) = (TmTApp rtrm typ)
   where rtrm = badSubTm x trm trm'
 
+-- Extracts the lhs of an application
 extractAbs :: Term -> Term
 extractAbs (TmApp trm1@(TmAbs _ _ _) trm2) = trm1
 extractAbs (TmApp trm1 trm2) = extractAbs trm1
 extractAbs (TmTApp trm@(TmTAbs _ _) typ) = trm
 extractAbs (TmTApp trm typ) = extractAbs trm
 
+-- Extracts the variables a term would add to the context
 extractCtx :: Term -> Context
 extractCtx (TmAbs i typ trm) = [TmBind i typ] ++ (extractCtx trm)
 extractCtx (TmApp trm1 trm2) = (extractCtx trm1) ++ (extractCtx trm2)
@@ -248,6 +215,7 @@ extractCtx (TmTAbs i trm) = [TyBind i] ++ (extractCtx trm)
 extractCtx (TmTApp trm typ) = extractCtx trm
 extractCtx trm = []
 
+-- Checks that a list of terms is beta equivalent to list of outputs
 checkEx :: [Term] -> [Term] -> Bool
 checkEx trms outs =
   let trmouts = zip trms outs
@@ -255,6 +223,7 @@ checkEx trms outs =
       env = (Map.empty, fvs)
       in all (\(trm,out) -> betaEqualTm (eval trm env) out fvs) trmouts
 
+-- Learn terms from types and examples
 lrnTerms :: Type -> [Example] -> Context  -> [Term] -> Int -> [Term]
 lrnTerms typ exs ctx ltrms 0 = []
 lrnTerms typ exs ctx [] n =
