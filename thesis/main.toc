@@ -63,4 +63,3 @@
 \contentsline {subsection}{\numberline {5.3.1}Dependent Types}{33}
 \contentsline {subsection}{\numberline {5.3.2}Linear Types}{33}
 \contentsline {subsection}{\numberline {5.3.3}Differential Types}{33}
-\contentsline {chapter}{Bibliography}{34}
