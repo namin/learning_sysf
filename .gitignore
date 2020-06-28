@@ -3,3 +3,7 @@
 */*.cut
 */*.aux
 */*.out
+*/*.bbl
+*/*.blg
+*/*.dvi
+*/*.lof
