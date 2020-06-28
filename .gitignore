@@ -1,8 +1,5 @@
-doc/*.log 
-doc/*.gz 
-doc/*.tex
-doc/*.cls
-doc/*.cut
-doc/*.sty
-doc/*.aux
-doc/*.out
+*/*.log 
+*/*.gz 
+*/*.cut
+*/*.aux
+*/*.out

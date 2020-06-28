@@ -73,6 +73,21 @@ genTmApps typ12 ctx n =
       apps = foldl (++) [] [cartProd fs xs | (fs, xs) <- fxs]
       in [TmApp f x | (f,x) <- apps]
 
+helpTmTApps :: Type -> Id -> [(Type, Type)]
+helpTmTApps (TyUnit) i = [(TyTAbs i TyUnit, TyUnit),
+                             (TyTAbs i (TyVar i), TyUnit)]
+helpTmTApps (TyBool) i = [(TyTAbs i TyBool, TyUnit),
+                             (TyTAbs i (TyVar i), TyBool)]
+helpTmTApps (TyVar _) i = []
+helpTmTApps typ@(TyAbs typ1 typ2) i
+  | typ1 /= typ2 = [(TyTAbs i typ, TyUnit),
+                    (TyTAbs i (TyAbs typ1 (TyVar i)), typ2),
+                    (TyTAbs i (TyAbs (TyVar i) typ2), typ1)]
+  | typ1 == typ2 = [(TyTAbs i typ, TyUnit),
+                    ((TyTAbs i (TyAbs typ1 (TyVar i))), typ2),
+                    ((TyTAbs i (TyAbs (TyVar i) typ2)), typ1),
+                    ((TyTAbs i (TyAbs (TyVar i) (TyVar i))), typ1)]
+
 -- Generates all type applications at type to some AST depth n
 genTmTApps :: Type -> Context -> Int -> [Term]
 genTmTApps typ ctx n =
