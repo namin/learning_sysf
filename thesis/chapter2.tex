@@ -1,0 +1,404 @@
+\chapter{System F}
+
+% 2.1 Syntax
+% A simple, powerful calculus
+% mention here how powerful the language is, yada yada...
+% 2.1.1 Types
+% 2.1.2 Terms
+% 2.1.3 Values
+% 2.1.4 Contexts
+% 2.1.5 Evaluation
+
+% 2.2 Typing, a relation
+% 2.2.1 T-Var
+% 2.2.2 T-Abs 
+% 2.2.3 T-TApp
+% 2.2.4 ......
+
+% 2.3 Properties of 
+
+% Worth discussing why System F came about. Same as with Girard's qualms with System T, I retreat to System F for its expressivity and lack of improving expressivity.
+\begin{singlespace}
+\setlength{\epigraphwidth}{0.6\textwidth}
+\epigraph{\textit{So we are led to endless improvement, in order to be able to consider, besides the booleans, the integers, lists, trees, etc. Of course, all this is done to the detriment of conceptual simplicity and modularity.}}{\textsc{Jean-Yves Girard \\  Proofs and Types (1989)}}
+\end{singlespace}
+
+\section{System T, then F}
+In the Dialectica interpretation, Kurt G{\"o}del constructs System T. With it, he proves the consistency of Heyting arithmetic: a logical framework for reasoning about natural numbers \cite{avigad1998godel}. That is, the axioms for Heyting arithmetic do not lead to contradictions about natural numbers. 
+
+Despite success, logicians like Girard expressed misgivings about System T. In order to reason over natural numbers, System T explicitly introduces machinery for reasoning over things like booleans and pairs. Because they aren't inherently representable in System T, you end up with the endless improvements Girard mentions in the epigraph. To do something new in System T, you add something new. What results is a language which quickly loses "conceptual simplicity and modularity."
+
+To amend these misgivings, Girard constructs System F \cite{girard1989proofs}. It's powerful enough to represent all machinery for the Dialectica interpretation, whilst preserving conceptual simplicity and modularity.
+
+Similar misgivings about languages which learn programs led my retreat to System F. To learn something new, you add something new. Very quickly, these languages get complex. The key contribution of this work shows that not only does System F provide all machinery for the Dialectica interpretation, but also for learning from examples. To do something new in System F, I add nothing new.
+
+The remainder of the chapter presents System F, with notation near identical to its presentation in \cite{pierce2002types}. My presentation is terse, in order to provide intuitions for readers unfamiliar with lambda calculi. These intuitions ground the work developed hereafter. For comprehensive coverage, I defer to \cite{pierce2002types}.\\
+
+\begin{figure}[h]
+\centering
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l  r}
+\specialrule{.1em}{0em}{.2em}
+
+\specialrule{.1em}{0em}{1em}
+    \Large \textsc{Syntax} & \\
+    & \\
+    \begin{math}
+    \setlength{\jot}{-2pt}
+    \begin{aligned}
+    e ::= \;& && \hspace*{.25in} \textsc{terms:}\\
+        & x && \hspace*{.25in} \textit{variable}\\
+        & e_1e_2 && \hspace*{.25in} \textit{application}\\
+        & \lam x {:} \tau.e && \hspace*{.25in} \textit{abstraction}\\
+        & e\lceil\tau\rceil && \hspace*{.25in} \textit{type application}\\    
+        & \Lambda\alpha.e && \hspace*{.25in} \textit{type abstraction}\\
+    \\
+    v ::= \;& && \hspace*{.25in} \textsc{values:} \\
+        & \lam x {:}\tau.e && \hspace*{.25in} \textit{abstraction}\\
+        & \Lambda\alpha.e && \hspace*{.25in} \textit{type abstraction}\\
+    \end{aligned}
+    \end{math} & 
+    \begin{math}
+    \setlength{\jot}{-2pt}
+    \begin{aligned}
+    \tau ::= \;& && \hspace*{.25in} \textsc{types:}\\
+        & \tau_1 \to \tau_2 && \hspace*{.25in} \textit{function type}\\
+        & \forall\alpha.\tau && \hspace*{.25in} \textit{polymorphic type}\\
+        & \alpha && \hspace*{.25in} \textit{type variable}\\
+    \\
+    \Gamma ::= \;& && \hspace*{.25in} \textsc{contexts:}\\
+        & \cdot && \hspace*{.25in} \textit{empty}\\
+        & x{:}\tau,\Gamma && \hspace*{.25in} \textit{variable}\\
+        & \alpha,\Gamma && \hspace*{.25in} \textit{type variable}
+    \end{aligned}
+    \end{math}\\
+    &\\
+\specialrule{.1em}{1em}{0em}
+\end{tabular}
+\caption{Syntax in System F}
+    \label{fig:syntax}
+\end{figure}	
+
+\section{Syntax}
+
+A convenience of System F is its minimal syntax. It's only marginally more  complex than the simplest typed languages. Figure \ref{fig:syntax} presents its grammar in Backus-Naur form \cite{pierce2002types}. Beyond aesthetics, the minimalism is a mathematical convenience. Proofs about System F's behavior need only worry about a handful of language constructs. 
+
+To ease presentation, we use encodings for natural numbers from the start. These encodings are standard, and are shown in \cite{girard1989proofs}.
+
+\subsection{Types}
+
+Types describe the behavior of programs.
+
+\begin{enumerate}[label=\alph*)]
+\item $nat$ is the type for natural numbers. A program of this type is a natural number.
+\item $nat \!\to\!nat$ is the function type from $nat$ to $nat$. A program of this type has an input of type $nat$ and an output of type $nat$.
+\item $nat \!\to\!nat\!\to\!nat$ is the function type from $nat$ and $nat$ to $nat$. A program of this type has two inputs of type $nat$ and an output of type $nat$.
+\item $\forall\alpha.\alpha\!\to\!\alpha\!\to\!\alpha$ is the polymorphic function type from $\alpha$ and $\alpha$ to $\alpha$. A program of this type has two inputs of the same type and an output of that type. Polymorphic abstraction, denoted by $\forall\alpha$, lets the function work for any type represented by $\alpha$. 
+\item $\forall\alpha.\alpha\!\to\!\alpha\!\to\!nat$ is the polymorphic function type from $\alpha$ and $\alpha$ to $nat$. A program of this type has two inputs of the same type and an output which is always type $nat$. 
+\end{enumerate}
+
+\subsection{Terms}
+
+Terms are programs.
+
+\begin{enumerate}[label=\alph*)]
+\item $\lam x{:}nat.x$ is a program which takes a natural number $x$ as input, and returns it. The variable which comes after $\lam$ in a term denotes the input. What comes after is the term's body, where its input is used for computation.
+\item $(\lam x{:}nat.x)1$ applies the previous program to $1$. 
+
+\item $\Lambda\alpha.\lam x{:}\alpha.x$ is a program which takes an $x$ of any type, and returns it. It's a polymorphic, or generic, version of the first program.
+\item $(\Lambda\alpha.\lam x{:}\alpha.x)\lceil nat\rceil$ applies the previous program to type $nat$. 
+
+\item $\lam f{:}nat\!\to\!nat.\lam x{:}nat.fx$ is a program which takes a function $f$ of type $nat\!\to\!nat$ and a natural number $x$ as input. It returns the application of $f$ to $x$.  
+\end{enumerate}
+
+
+
+\subsection{Values}
+
+Values are programs which have finished computing.
+\begin{enumerate}[label=\alph*)]
+\item $(\lam x{:}nat.x)1$ is not a value. The program is an application, which can't be a value. Applications means there's computing left to do, namely the application of the program to its argument.  
+\item $(\lam x{:}nat)$ is a value. The program is applied to no arguments. There's no computing left to do.
+\item $1$ is a value. 
+\end{enumerate}
+
+\subsection{Contexts}
+
+Contexts carry type information about variables. 
+\begin{enumerate}[label=\alph*)]
+\item $x{:}nat, y{:}nat$ is a valid context. It says $x$ and $y$ have type $nat$.  
+\item $\alpha$ is a valid context. It says $\alpha$ is a type variable.
+\item $\cdot$ is a valid context. It says nothing. At times, when other information is present in the context, we omit $\cdot$---which technically, is always present in the context.
+\end{enumerate}
+
+
+
+\section{Evaluating, a relation}
+
+System F's syntax tells us what programs look like. But doesn't say anything about how they run, how they compute. Suppose I have the program $(\lam x{:}nat.x)1$. It applies a program which returns its input to the number $1$. It should return $1$. But how exactly? We want a relation which gives us the following behavior.
+$$(\lam x{:}nat.x)1 \to_\beta x[1/x] \to_\beta 1$$
+First, $1$ is bound to the input $x$ of $\lam x{:}nat.x$. Then $1$ substitutes $x$, resulting in $1$. The notation $x[1/x]$ denotes $1$ replacing $x$ in the program $x$. A relation of this behavior is defined in Figure \ref{fig:evaluating}.
+
+\begin{figure}[h]
+\centering
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l r  l r}
+\specialrule{.1em}{0em}{.2em}
+\specialrule{.1em}{0em}{1em}
+    \Large \textsc{Evaluating} & 
+    &  & \fbox{ $e \to_\beta e'$}\\
+    & & \\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$e_1 \to_\beta e_1'$}
+            \RightLabel{\textsc{(E-App1)}}
+        \UnaryInfC{$e_1e_2 \to_\beta e_1'e_2$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$e \to_\beta e'$}
+            \RightLabel{\textsc{(E-TApp)}}
+        \UnaryInfC{$e\lceil\tau\rceil \to_\beta e'\lceil\tau\rceil$}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$e_2 \to_\beta e_2'$}
+            \RightLabel{\textsc{(E-App2)}}
+        \UnaryInfC{$e_1e_2 \to_\beta e_1e_2'$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$(\Lambda\alpha.\lam x{:}\alpha.e)\lceil\tau\rceil \to_\beta (\lam x{:}\alpha.e)[\tau/\alpha]\,\,$\textsc{(E-TSub)}}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$(\lam x{:}\tau.e)v \to_\beta e[v/x]\,\,$\textsc{(E-Sub)}}
+        \DisplayProof
+    } \\
+    & \\
+\specialrule{.1em}{1em}{0em}
+\end{tabular}
+\caption{Evaluating in System F}
+    \label{fig:evaluating}
+\end{figure}
+
+\textsc{(E-App1)} says that if a program $e_1$ evaluates to $e_1'$, then $e_1e_2$ evaluates to $e_1'e_2$. For example:
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$(\lam x{:}nat\!\to\!nat.x)(\lam y{:}nat.y) \to_\beta (\lam y{:}nat.y)$}
+	\RightLabel{\textsc{(E-App1)}}
+	\UnaryInfC{$((\lam x{:}nat\!\to\!nat.x)(\lam y{:}nat.y))1 \to_\beta (\lam y{:}nat.y)1$}
+\end{prooftree}
+
+\textsc{(E-App2)} says that if a program $e_2$ evaluates to $e_2'$, then $e_1e_2$ evaluates to $e_1e_2'$. For example:
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$(\lam x{:}nat.x)1 \to_\beta 1$}
+	\RightLabel{\textsc{(E-App2)}}
+	\UnaryInfC{$(\lam x{:}nat.x)((\lam x{:}nat.x)1) \to_\beta (\lam x{:}nat.x)1$}
+\end{prooftree}
+
+\textsc{(E-Sub)} says that if a program $\lam x{:}\tau.e$ is applied to value $v$, then replace all instances of $x$ in $e$ with $v$. For example: \vspace*{-1.2em}
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$(\lam x{:}nat.x)1 \to_\beta x[1/x]\,\,$\textsc{(E-Sub)}}
+\end{prooftree}
+
+\textsc{(E-TApp)} says that if a program $e$ evaluates to $e'$, then $e\lceil\tau\rceil$ evaluates to $e'\lceil\tau\rceil$. For example:
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Lambda\alpha.(\lam x{:}\alpha\!\to\!\alpha.x)(\lam x{:}\alpha.x) \to_\beta \Lambda\alpha.\lam x{:}\alpha.x$}
+	\RightLabel{\textsc{(E-TApp)}}
+	\UnaryInfC{$(\Lambda\alpha.(\lam x{:}\alpha\!\to\!\alpha.x)(\lam x{:}\alpha.x))\lceil nat\rceil \to_\beta (\Lambda\alpha.\lam x{:}\alpha.x)\lceil nat\rceil$}
+\end{prooftree}
+
+\textsc{(E-TSub)} says that if a program $\Lambda\alpha.\lam x{:}\alpha.e$ is applied to type $\tau$, then replace all instances of $\alpha$ in $\lam x{:}\alpha.e$ with $\tau$. For example: \vspace*{-1.2em}
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$(\Lambda\alpha.\lam x{:}\alpha.x)\lceil nat\rceil \to_\beta (\lam x{:}\alpha.x)[nat/\alpha]\,\,$\textsc{(E-TSub)}}
+\end{prooftree}
+
+The evaluating relation comes in many forms. Here, we use what's referred to as a call-by-value evaluation strategy \cite{plotkin1975call}. More exist, and each impact how programs evaluate in System F, e.g. call-by-name and call-by-need \cite{plotkin1975call, ariola1997call}. These alternatives aren't discussed, but we do consider the reflexive, symmetric, transitive closure of the defined evaluating relation, $=_\beta$. It denotes program equality. Because this evaluating relation has the normalization property, deciding program equality is decidable. In upcoming chapters, we'll see how program equality is used to learn from examples.
+
+
+\section{Typing, a relation}
+
+With syntax, we saw what programs look like. With evaluation, we saw how programs execute. So then why do we need typing? Without typing, we can write the following program in System F. The grammar in Figure \ref{fig:syntax} permits it. \vspace*{-1.0em}
+\begin{singlespace}
+$$(\lam x{:}nat.x)(\lam y{:}nat.y)$$ 
+\end{singlespace}
+But this program is nonsense. The left-hand side of the application is a program which returns its argument $x$, which must be of type $nat$. The right-hand side is the same program. If we were to naively evaluate this program, it would substitute $\lam x{:}nat.x$ for the argument $x$ on the left-hand side. Yet the argument wouldn't be of type $nat$. $\lam x{:}nat.x$ is the function type $nat\!\to\!nat$. The types don't align for evaluation, to do computation.
+
+To actually do something, the left-hand side needs an argument of the correct type. \vspace*{-1.0em}
+\begin{singlespace}
+$$(\lam x{:}nat\!\to\!nat.x)(\lam y{:}nat.y)$$
+\end{singlespace}
+This is why we need typing. It lets us build programs which make sense, for which types align to do computation. Like evaluation, we define typing as a relation.\\
+\begin{figure}[h]
+\centering
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l r  l r}
+\specialrule{.1em}{0em}{.2em}
+\specialrule{.1em}{0em}{1em}
+    \Large \textsc{Typing} & 
+    &  & \framebox{$\Gamma \vdash e : \tau$}\\
+    & & \\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$x:\tau \in \Gamma$}
+            \RightLabel{\textsc{(T-Var)}}
+        \UnaryInfC{$\Gamma \vdash x : \tau$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma,\alpha \vdash e : \tau$}
+            \RightLabel{\textsc{(T-TAbs)}}
+        \UnaryInfC{$\Gamma \vdash \Lambda \alpha.e:\forall\alpha.\tau$}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma,x{:}\tau_1 \vdash e_2 : \tau_2$}
+            \RightLabel{\textsc{(T-Abs)}}
+        \UnaryInfC{$\Gamma \vdash \lam x{:}\tau_1.e_2:\tau_1 \to \tau_2$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma \vdash e : \forall\alpha.\tau_1$}
+            \RightLabel{\textsc{(T-TApp)}}
+        \UnaryInfC{$\Gamma \vdash e\lceil\tau_2\rceil : [\tau_2/\alpha]\tau_1$}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma \vdash e_1 : \tau_1 \to \tau_2$}
+        \AxiomC{$\Gamma \vdash e_2 : \tau_1$}
+            \RightLabel{\textsc{(T-App)}}
+        \BinaryInfC{$\Gamma \vdash e_1e_2 : \tau_2$}
+        \DisplayProof
+    } \\
+    & \\
+\specialrule{.1em}{1em}{0em}
+\end{tabular}
+\caption{Typing in System F}
+    \label{fig:typing}
+\end{figure}
+
+\textsc{(T-Var)} says that if $x$ is bound to type $\tau$ in the context $\Gamma$, then the program $x$ is of type $\tau$. 
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$x {:} nat \in x {:} nat$}
+	\RightLabel{\textsc{(T-Var)}}
+	\UnaryInfC{$x{:}nat \vdash x : nat$}
+\end{prooftree}
+
+\textsc{(T-Abs)} says that if $x$ is bound to type $\tau_1$ in the context $\Gamma$ and that a program $e_2$ is of type $\tau_2$, then the program $\lam x{:}\tau_1.e_2$ is of type $\tau_1 \!\to\! \tau_2$ and $x$ is removed from the context. 
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma,x{:}nat \vdash \lam y{:}nat.y : nat \!\to\! nat$}
+	\RightLabel{\textsc{(T-Abs)}}
+	\UnaryInfC{$\Gamma \vdash \lam x{:}nat.\lam y{:}nat.y : nat \!\to\! nat \!\to \!nat$}
+\end{prooftree}
+
+\textsc{(T-App)} says that if a program $e_1$ is of type $\tau_1 \!\to\! \tau_2$ and a program $e_2$ is of type $\tau_1$, then  $e_1e_2$ is of type $\tau_2$.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma \vdash \lam x{:}nat.x : nat \!\to\! nat$}
+	\AxiomC{$\Gamma \vdash 1 : nat$}
+	\RightLabel{\textsc{(T-App)}}
+	\BinaryInfC{$\Gamma \vdash (\lam x{:}nat.x)1 : nat$}
+\end{prooftree}
+
+\textsc{(T-TAbs)} says that if $\alpha$ is in the context, and a program $e$ is of type $\tau$, then the program $\Lambda\alpha.e$ is of type $\forall\alpha.\tau$ and $\alpha$ is removed from the context.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma,\alpha \vdash \lam x{:}nat.x : \alpha \!\to\! \alpha$}
+	\RightLabel{\textsc{(T-TAbs)}}
+	\UnaryInfC{$\Gamma \vdash \Lambda\alpha.\lam x{:}\alpha.x : \forall\alpha.\alpha \!\to\! \alpha$}
+\end{prooftree}
+
+\textsc{(T-TApp)} says that if a program $e$ is of type $\forall\alpha.\tau_1$, then  the program $e\lceil\tau_2\rceil$ is of type $[\tau_2/\alpha]\tau_1$.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma \vdash \Lambda\alpha.\lam x{:}\alpha.x : \forall\alpha.\alpha\!\to\!\alpha$}
+	\RightLabel{\textsc{(T-Abs)}}
+	\UnaryInfC{$\Gamma \vdash (\Lambda\alpha.\lam x{:}\alpha.x)\lceil nat\rceil : nat\!\to\!nat$}
+\end{prooftree}
+
+As with evaluating, there are many ways to construct typing relations on System F. Each offers their own take on what constitutes a well-typed program in System F, e.g. System F extended with subtyping \cite{cardelli1991extension}. The behavior of the typing relation is especially important for learning, as learning will depend on key properties of the typing relation: namely progress and preservation.
+
+\section{Metatheory}
+Well-typed terms can be thought of as theorems constructed through the typing relation, whose proof are sound proof trees. Hence, statements about these theorems, or the typing relation in general, are metatheoretic statements. I briefly review key metatheoretic properties of System F essential for learning. Proofs ommitted, but easily found in \cite{girard1989proofs}.
+\subsection{Programs don't get stuck}
+\begin{theorem}[\textsc{Progress in Typing}]
+If $e$ is a closed, well-typed program, then either $e$ is a value or else there is some program $e'$ such that $e \to_\beta e'$.
+\label{progress-typing}
+\end{theorem}
+
+Programs shouldn't get stuck in the middle of computation. We want well-typed programs to always have something to do, even if they don't ever stop. Progress ensures this. And with preservation, it lets us prove typing is sound, that we can prove all true theorems implied by the typing relation.
+\subsection{Programs don't change types}
+\begin{theorem}[\textsc{Preservation in Typing}]
+If $\,\Gamma \vdash e : \tau$ and $e \to_\beta e'$, then $\Gamma \vdash e' : \tau$.
+\label{preservation-typing}
+\end{theorem}
+
+Programs shouldn't suddenly switch types in the middle of computation. Remember, the point of the type is to let us know kind of computation to expect from a program. If the type switches during computation, we're losing that information. With progress, preservation lets us prove typing is sound. By extension, they are essential to prove learning sound.
+
+\subsection{Programs always halt}
+\begin{theorem}[\textsc{Normalization in Evaluation}]
+Well-typed programs in System F always evaluate to a value, to a normal form.
+\label{normalization-evaluation}
+\end{theorem}
+
+Progress doesn't guarantee programs ever stop computing. They could get stuck in infinite loops. Under certain type systems it's impossible to guarantee programs ever stop, e.g. recursive types \cite{pierce2002types}. But in System F we know all programs halt, or stop. For learning from examples, introduced in subsequent chapters, this property is essential. With normalization, program equivalence becomes decidable---a key part of the learning procedure. 
+
+% Evaluation
+% --Church-Rosser
+% --Strongly Normalizing
+% Typing
+% --Progress
+% --Preservation

@@ -1,0 +1,66 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}To learn a program}{1}
+\contentsline {section}{\numberline {1.1}The verb, learn}{1}
+\contentsline {section}{\numberline {1.2}Humans learn programs}{2}
+\contentsline {subsection}{\numberline {1.2.1}A recurrent observation}{2}
+\contentsline {subsection}{\numberline {1.2.2}A current controversy}{2}
+\contentsline {section}{\numberline {1.3}Computers learn programs}{3}
+\contentsline {subsection}{\numberline {1.3.1}Rosette}{3}
+\contentsline {subsection}{\numberline {1.3.2}Synquid}{3}
+\contentsline {subsection}{\numberline {1.3.3}Myth}{4}
+\contentsline {section}{\numberline {1.4}Why are we better?}{4}
+\contentsline {subsection}{\numberline {1.4.1}Programmer assistants, not programmers}{4}
+\contentsline {subsection}{\numberline {1.4.2}Seemingly, an impasse}{4}
+\contentsline {subsection}{\numberline {1.4.3}A sensible sacrifice}{5}
+\contentsline {chapter}{\numberline {2}System F}{6}
+\contentsline {section}{\numberline {2.1}System T, then F}{6}
+\contentsline {section}{\numberline {2.2}Syntax}{7}
+\contentsline {subsection}{\numberline {2.2.1}Types}{7}
+\contentsline {subsection}{\numberline {2.2.2}Terms}{7}
+\contentsline {subsection}{\numberline {2.2.3}Values}{8}
+\contentsline {subsection}{\numberline {2.2.4}Contexts}{8}
+\contentsline {section}{\numberline {2.3}Evaluating, a relation}{8}
+\contentsline {section}{\numberline {2.4}Typing, a relation}{9}
+\contentsline {section}{\numberline {2.5}Metatheory}{11}
+\contentsline {subsection}{\numberline {2.5.1}Programs don't get stuck}{11}
+\contentsline {subsection}{\numberline {2.5.2}Programs don't change types}{11}
+\contentsline {subsection}{\numberline {2.5.3}Programs always halt}{11}
+\contentsline {chapter}{\numberline {3}Learning from types}{12}
+\contentsline {section}{\numberline {3.1}Types aid communication}{12}
+\contentsline {section}{\numberline {3.2}Learning, a relation}{12}
+\contentsline {section}{\numberline {3.3}Metatheory}{14}
+\contentsline {subsection}{\numberline {3.3.1}Typing and Learning are equivalent}{14}
+\contentsline {subsection}{\numberline {3.3.2}Learned programs don't get stuck}{14}
+\contentsline {subsection}{\numberline {3.3.3}Learned programs don't change type}{14}
+\contentsline {subsection}{\numberline {3.3.4}Learned programs always halt}{14}
+\contentsline {section}{\numberline {3.4}Learning lists, products, and sums}{15}
+\contentsline {subsection}{\numberline {3.4.1}Learning the list encoding}{15}
+\contentsline {subsection}{\numberline {3.4.2}Learning the product encoding}{17}
+\contentsline {subsection}{\numberline {3.4.3}Learning the sum encoding}{19}
+\contentsline {chapter}{\numberline {4}Learning from examples}{21}
+\contentsline {section}{\numberline {4.1}Examples aid communication}{21}
+\contentsline {section}{\numberline {4.2}Learning, a relation}{21}
+\contentsline {subsection}{\numberline {4.2.1}What are examples?}{22}
+\contentsline {subsection}{\numberline {4.2.2}Learning, informally}{22}
+\contentsline {subsection}{\numberline {4.2.3}Learning, formally}{23}
+\contentsline {section}{\numberline {4.3}Metatheory}{24}
+\contentsline {subsection}{\numberline {4.3.1}Typing and Learning are still equivalent}{25}
+\contentsline {subsection}{\numberline {4.3.2}Learned programs still don't get stuck}{27}
+\contentsline {subsection}{\numberline {4.3.3}Learned programs still don't change type}{27}
+\contentsline {subsection}{\numberline {4.3.4}Learned programs still always halt}{27}
+\contentsline {section}{\numberline {4.4}Learning identity, not, and successor}{27}
+\contentsline {subsection}{\numberline {4.4.1}Learning polymorphic identity}{28}
+\contentsline {subsection}{\numberline {4.4.2}Learning boolean not}{29}
+\contentsline {subsection}{\numberline {4.4.3}Learning church successor}{30}
+\contentsline {chapter}{\numberline {5}To learn a language}{31}
+\contentsline {section}{\numberline {5.1}Languages are learnable}{31}
+\contentsline {subsection}{\numberline {5.1.1}Language, the ultimate abstraction}{31}
+\contentsline {subsection}{\numberline {5.1.2}A promethean gesture}{32}
+\contentsline {section}{\numberline {5.2}From theory to implementation}{32}
+\contentsline {subsection}{\numberline {5.2.1}Problems of search}{32}
+\contentsline {subsection}{\numberline {5.2.2}Problems of data}{32}
+\contentsline {section}{\numberline {5.3}Different typing, different learning}{33}
+\contentsline {subsection}{\numberline {5.3.1}Dependent Types}{33}
+\contentsline {subsection}{\numberline {5.3.2}Linear Types}{33}
+\contentsline {subsection}{\numberline {5.3.3}Differential Types}{33}
+\contentsline {chapter}{Bibliography}{34}

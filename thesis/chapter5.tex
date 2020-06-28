@@ -1,0 +1,73 @@
+\chapter{To learn a language}
+\begin{singlespace}
+\setlength{\epigraphwidth}{0.6\textwidth}
+\epigraph{\textit{If you don't understand interpreters, you can still write programs; you can even be a competent programmer. But you can't be a master.}}{\textsc{Hal Abelson \\  Foreword to \textit{Essentials of Programming Languages} (2008)}}
+\end{singlespace}
+
+\section{Languages are learnable}
+
+\begin{displayquote}
+\begin{singlespace}
+\centering
+\textit{Can a machine learn a programming language?}
+\end{singlespace}
+\end{displayquote}
+
+% 5.1 Possible in System F
+% 5.2 But why?
+
+The question which started this thesis. And to which there's been essentially no work. Despite a surging interest in machines which learn programs \cite{gulwani2017program}, interest escapes machines which learn programming languages. 
+
+A programming language is itself, just another program. Either it's an interpreter, or it's a compiler. Interpreters take programs in a language and interpret them, give them a value or meaning. Compilers take programs in a language and translate them to another, where they are then interpreted, given a value or meaning. If machines can learn programs, why not interpreters or compilers? Because of completeness of learning in System F, you can.
+
+\subsection{Language, the ultimate abstraction}
+
+Programs are beholden to the designer of the language they are written in. If the designer decides that you must attend to memory allocation, you must. Or if the designer decides that all statements must be wrapped in curly brackets, then \{they must\}.
+
+But it's impossible for these decisions to suit everyone's needs. It's why we constantly see the proliferation of new programming languages. People design languages to include the abstractions which are helpful for them, and exclude those which aren't. They are the ultimate abstraction. They let us be productive and solve programs effectively, which would otherwise be difficult or impossible under the design constraints of another language. Because we can't anticipate all problems programmers will need to solve, it's essential we can create the abstractions we need, the programming languages we need. 
+
+% Example, be concrete.
+Take for instance, the situation faced by me in writing this work. System F, while beautiful in many respects, suffers when trying to write programs. It's so minimal that writing simple programs require good effort. And to write more complex programs, it's nearly prohibitive. For instance, I originally meant to present a proof of a compiler in System F. But the proof and program itself would've been lengthy and unnecessarily laborious. Instead I defer to the completeness of learning to show that it's possible. But had I been using an OCaml-like language \cite{leroy2014ocaml}, with constructs defined to make programming (and proving) easier, then I would've included the compiler proof. 
+
+\subsection{A promethean gesture}
+
+Machines which learn programs do so constrained by the languages we imbue them with. They are beholden to our language decisions. Some work acknowledges this limitation \cite{ellis2018learning}. Yet still, machines cannot design the languages they need for the problems they try to solve. The languages we imbue them with lack this ability.
+
+But they shouldn't be doomed to our language decisions. We ought to design languages which give power to the machine, which let them design their own languages, abstractions---those best fit for the problem from their own perspective. System F does this, at least in principle. Learning is complete in System F. Any program which can be written in System F can be learned, including compilers or interpreters. 
+
+% 
+% nn learn own abstractions
+
+\section{From theory to implementation}
+
+Without an implementation of learning it awaits to be seen whether the results of this work are borne out in practice and not just in theory. The learning relations described are highly non-deterministic, and do not themselves constitute learning procedures. They do however serve as the basis for a learning procedure. These are the project's next steps. Here I sketch out the difficulties to come.
+
+\subsection{Problems of search}
+
+Once learning exhausts the information in examples, learning a program becomes a game of search. For complex programs, the search space grows prohibitively. Programs like interpreters and compilers have this issue. In \cite{osera2015program}, where a simple interpreter is learned, the amount of time it took was significantly longer than other learned programs---because of the size of the search space.
+
+In order to tackle the real issues of search, languages need not only develop frameworks for learning, but also clever algorithms for search. In this work, those issues are cast aside to focus to formulate learning. They are nevertheless, interesting and important problems necessary to transition theory to implementation.
+
+\subsection{Problems of data}
+
+To learn a program, I've shown that there exist examples that can be shown to teach the program. For many programs, there will be many sets of examples to do the job. But in practice, it may be that specific sets of examples make learning easier or more difficult. This, again, is observed in works like \cite{osera2015program}. It's analagous to the problems faced by teachers. In principle, each student can learn the material---but what's the best way to present the data such that the student learns the right thing.
+
+Similar to search, I elide the real problems of teaching. Nevertheless it's essential that languages which can learn programs facilitate practical teaching as well. Otherwise you have a language which can learn any program, but for which many programs teaching is an overwhelming burden.
+
+
+\section{Different typing, different learning}
+
+This work uses System F's typing relation to yield a learning relation, from types and examples. The same strategy could be used towards other typing relations, yielding new learning relations with their own interesting properties. Just within System F, we saw how sum types $\tau_a+\tau_b$ impose useful constraints on learning. When learning, and encountering a sum type, you distribute examples according to whether they're $\tau_a$ or $\tau_b$. Other types ought to impose their own useful constraints on learning. As bountiful the literature on type systems and typing relations, I gesture that the same expanse of literature could exist for learning systems and learning relations. 
+
+\subsection{Dependent Types}
+% 5.1 Dependent Types
+Dependent types are far more expressive than the types in System F \cite{pierce2005advanced}. They let types depend on values. For instance, you can define a type $Vect:Nat\to Type\to Type$, which describes a vector whose length varies its type; perhaps for memory considerations. What's important are that these types are precise. They aid the issues pointed out with problems of data, problems of teaching. Because we can be more precise in our languages about what we want the machine to learn, it impacts learning. 
+
+\subsection{Linear Types}
+% 5.2 Linear Types
+Linear types introduce resource-sensitivity to typing. You can have linear variables, which can only be used once in the typing derivation. Additionally, contexts split throughout the course of a typing derivation---keeping them smaller than they would be in typical type systems. Problems of search typically stem from the context growing too large over the course of learning, and this kind of resource-sensitivity ought to guide learning in a fruitful way. Recent work introducing linear types to a learning framework akin to \textsc{Synquid} show these interesting behaviors.
+
+\subsection{Differential Types}
+% 5.3 Differential Linear Types
+
+Differential linear logic extends linear logic with constructs for differentiating proofs, which correspond to programs written in a linear type system.  A recent pre-print uses these constructs to explore learning encodings of Turing machines \cite{clift2018derivatives}. To date, these are works mostly explored in logic---which have not yet made ways into the programming languages writ large. Yet we already know the great promise of learning through differentiation, e.g. the current resurgence and success of deep neural networks \cite{lecun2015deep}. The prospects are exciting for a language which combines learning in differentiable and non-differentiable ways. 

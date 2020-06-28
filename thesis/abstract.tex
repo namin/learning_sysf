@@ -1,0 +1,17 @@
+\section*{\huge Abstract}
+
+Programming languages let us communicate with machines. Yet to date, nearly every language makes this a laborious process. Every instruction, with fine detail, must be specified to the machine. We aren't doomed to program this way. Instead, an upgrowth of works in programming languages aim to design programming languages which allow for more informal specifications of programs. Programs can be specified by providing examples of expected behavior---or by providing an informative type. Think of how one might communicate the rules of game to a friend, both by formal specification and by examples of play. I describe these languages as having machinery for "learning". You specify the program you want, then the language uses its machinery to learn the program you specified. 
+
+In this work I show that System F, a classic and storied programming language, can "learn" programs. Unlike previous works which introduce machinery explicitly for learning, I show System F needs nothing new. Moreover, System F can learn programs no previous language has been shown to learn---higher-order programs from examples. These strengths give System F the capacity to learn not only programs, but programming languages.
+
+In Chapter 1, I introduce the problem of learning. These include musings over learning as discussed in cognitive science, followed by learning in programming languages. 
+
+In Chapter 2, I introduce System F. Here I tersely cover the language and state important theorems which hold in System F and which make learning possible.
+
+In Chapter 3, I begin the technical treatment of learning, when data are types. A key theorem is proved. Namely, that any program in System F can be learned from types.
+
+In Chapter 4, I extend learning from types, when data are examples. Another key theorem is proved. Namely, that any program in System F can be learned from examples.
+
+In Chapter 5, I muse over the significance of learning in System F---discussing the prospect of learning programming languages in System F. Considerations for future work, including barriers to implementation and extending to new type systems, are discussed. 
+
+With the exception of Chapter 2, all content and interpretatons are original contributions.

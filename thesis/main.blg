@@ -1,0 +1,61 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: main.aux
+A level-1 auxiliary file: dedication.aux
+A level-1 auxiliary file: acknowledgements.aux
+A level-1 auxiliary file: abstract.aux
+A level-1 auxiliary file: chapter1.aux
+A level-1 auxiliary file: chapter2.aux
+A level-1 auxiliary file: chapter3.aux
+A level-1 auxiliary file: chapter4.aux
+A level-1 auxiliary file: chapter5.aux
+A level-1 auxiliary file: conclusions.aux
+A level-1 auxiliary file: appendix1.aux
+A level-1 auxiliary file: appendix2.aux
+The style file: plain.bst
+Database file #1: refs.bib
+Warning--empty publisher in girard1989proofs
+Warning--empty year in girard1989proofs
+Warning--can't use both volume and number fields in polikarpova2016program
+You've used 32 entries,
+            2118 wiz_defined-function locations,
+            692 strings with 8940 characters,
+and the built_in function-call counts, 10527 in all, are:
+= -- 1044
+> -- 462
+< -- 9
++ -- 190
+- -- 152
+* -- 694
+:= -- 1744
+add.period$ -- 100
+call.type$ -- 32
+change.case$ -- 164
+chr.to.int$ -- 0
+cite$ -- 35
+duplicate$ -- 428
+empty$ -- 845
+format.name$ -- 152
+if$ -- 2214
+int.to.chr$ -- 0
+int.to.str$ -- 32
+missing$ -- 38
+newline$ -- 162
+num.names$ -- 64
+pop$ -- 192
+preamble$ -- 1
+purify$ -- 138
+quote$ -- 0
+skip$ -- 293
+stack$ -- 0
+substring$ -- 636
+swap$ -- 94
+text.length$ -- 9
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 114
+warning$ -- 3
+while$ -- 105
+width$ -- 34
+write$ -- 347
+(There were 3 warnings)

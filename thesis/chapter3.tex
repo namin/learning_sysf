@@ -1,0 +1,631 @@
+\chapter{Learning from types}
+
+\begin{singlespace}
+\setlength{\epigraphwidth}{0.6\textwidth}
+\epigraph{\textit{The fundamental problem of communication is that of reproducing at one point either exactly or approximately a message selected at another point.}}{\textsc{Claude Shannon \\  The Mathematical Theory of Communication (1948)}}
+\end{singlespace}
+
+\section{Types aid communication}
+Programs communicate. They speak to machines, what we tell them to. For machines, the communication is simple. Programs have all they need to communicate intent. But the programmer bears the burden of thought. In order to say something, the programmer must be precise---every instruction a meticulous curation.
+
+Humans communicate far differently. At times, communication can feel meticulous. But often it is simple. The things we say aren't precise formal specifications of what we mean to say, but are rather just precise enough to convey useful ideas. The burden of thought is balanced between speaker and listener. For example,
+\begin{displayquote}
+\centering
+\textit{A glork smashed my car.}
+\end{displayquote}
+You don't know what a glork is, but you at least know it smashed my car. I'm precise enough to say something useful, that glorks smash things. But imprecise enough that the listener must guess what a glork is. Note however, that you can't just guess anything. A glork isn't likely a worm, unless you know of worms which smash cars. If we think of glorks as having a type, it's type might be "smasher", which heavily constrains the kinds of things a listener can plug in for the meaning of glork. Maybe it's an elephant, maybe it's a hurricane. 
+
+We can harness types to build languages which allow for this sort of productive, yet imprecise kind of communication. We provide a type, and let the computer learn what we mean. 
+
+% Human communication 
+% -- surely a lot less precise, but boy is it productive. 
+% -- so productive, we spend more time on discussing the ideas we want, instead of the minutia of every small particular..
+% -- the simplest kind of language we can build which shifts the burden of thought is one which learns from types. types let us know what programs will do, and hence types are useful information for communication. instead of writing a program for a given type, maybe a language could construct the program we want simply by giving its type.
+
+
+
+\section{Learning, a relation}
+
+\begin{figure}[ht]
+\centering
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{l r  l r}
+\specialrule{.1em}{0em}{.2em}
+\specialrule{.1em}{0em}{1em}
+    \Large \textsc{Learning} & 
+    &  & \framebox{$\Gamma \vdash \tau \rightsquigarrow e$}\\
+    & & \\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$x:\tau \in \Gamma$}
+            \RightLabel{\textsc{(L-Var)}}
+        \UnaryInfC{$\Gamma \vdash \tau \rightsquigarrow x$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma,\alpha \vdash \tau \rightsquigarrow e$}
+            \RightLabel{\textsc{(G-TAbs)}}
+        \UnaryInfC{$\Gamma \vdash \forall\alpha.\tau \rightsquigarrow \lam \alpha.e$}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma,x{:}\tau_1 \vdash \tau_2 \rightsquigarrow e_2$}
+            \RightLabel{\textsc{(L-Abs)}}
+        \UnaryInfC{$\Gamma \vdash \tau_1 \to \tau_2 \rightsquigarrow \lam x{:}\tau_1.e_2$}
+        \DisplayProof
+    } &
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma \vdash \forall\alpha.\tau_1 \rightsquigarrow e$}
+            \RightLabel{\textsc{(L-TApp)}}
+        \UnaryInfC{$\Gamma \vdash [\tau_2/\alpha]\tau_1 \rightsquigarrow e\lceil\tau_2\rceil$}
+        \DisplayProof
+    }
+    \\
+    & &\\
+    \multicolumn{2}{c}{
+    \def\extraVskip{4pt}
+    \def\labelSpacing{4pt}
+    \def\defaultHypSeparation{\hskip .05in}
+        \AxiomC{$\Gamma \vdash \tau_1 \to \tau_2 \rightsquigarrow e_1$}
+        \AxiomC{$\Gamma \vdash \tau_1 \rightsquigarrow e_2$}
+            \RightLabel{\textsc{(L-App)}}
+        \BinaryInfC{$\Gamma \vdash \tau_2 \rightsquigarrow e_1e_2$}
+        \DisplayProof
+    } \\
+    & \\
+\specialrule{.1em}{1em}{0em}
+\end{tabular}
+\caption{Learning from types in System F}
+    \label{fig:learning}
+\end{figure}
+
+As with typing and evaluation, I describe learning as a relation:
+\begin{displayquote}
+\centering
+$\Gamma \vdash \tau \rightsquigarrow e$\\
+\textit{Given a context} $\Gamma$ \textit{and type} $\tau$\textit{, I can learn program} $e$.
+\end{displayquote}
+
+This relation is actually equivalent to the typing relation. The only real difference is one of notation. For instance, note the symmetries between Figure \ref{fig:learning} and Figure \ref{fig:typing}. When discussing metatheory, we prove the equivalence. Despite this, the learning relation is not redundant. The new notation forms the core of an extended learning relation defined in the next chapter, to learn from examples. Additionally, it shows how to exploit the typing relation to yield the core of a learning relation, learning from types.
+
+\textsc{(L-Var)} says that if $x$ is bound to type $\tau$ in the context $\Gamma$, then you can learn the program $x$ of type $\tau$. 
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$x {:} nat \in x {:} nat$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$x{:}nat \vdash nat \rightsquigarrow x$}
+\end{prooftree}
+
+\textsc{(L-Abs)} says that if $x$ is bound to type $\tau_1$ in the context $\Gamma$ and you can learn a program $e_2$ from type $\tau_2$, then you can learn the program $\lam x{:}\tau_1.e_2$ from type $\tau_1 \!\to\! \tau_2$ and $x$ is removed from the context. \vspace*{-.5em}
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma,x{:}nat \vdash nat \!\to\! nat \rightsquigarrow \lam y{:}nat.y$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$\Gamma \vdash nat \!\to\! nat \!\to \!nat \rightsquigarrow \lam x{:}nat.\lam y{:}nat.y$}
+\end{prooftree}
+
+\textsc{(L-App)} says that if you can learn a program $e_1$ from type $\tau_1 \!\to\! \tau_2$ and a program $e_2$ from type $\tau_1$, then you can learn $e_1e_2$ from type $\tau_2$.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma \vdash nat \!\to\! nat \rightsquigarrow \lam x{:}nat.x$}
+	\AxiomC{$\Gamma \vdash nat \rightsquigarrow 1$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$\Gamma \vdash nat \rightsquigarrow (\lam x{:}nat.x)1 $}
+\end{prooftree}
+
+\textsc{(L-TAbs)} says that if $\alpha$ is in the context, and you can learn a program $e$ from type $\tau$, then you can learn a program $\Lambda\alpha.e$ from type $\forall\alpha.\tau$ and $\alpha$ is removed from the context.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma,\alpha \vdash \alpha \!\to\! \alpha \rightsquigarrow \lam x{:}nat.x$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$\Gamma \vdash \forall\alpha.\alpha \!\to\! \alpha \rightsquigarrow \Lambda\alpha.\lam x{:}\alpha.x$}
+\end{prooftree}
+
+\textsc{(T-TApp)} says that if you can learn a program $e$ from type $\forall\alpha.\tau_1$, then you can learn the program $e\lceil\tau_2\rceil$ from type $[\tau_2/\alpha]\tau_1$.
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$\Gamma \vdash \forall\alpha.\alpha\!\to\!\alpha \rightsquigarrow \Lambda\alpha.\lam x{:}\alpha.x$}
+	\RightLabel{\textsc{(T-Abs)}}
+	\UnaryInfC{$\Gamma \vdash nat\!\to\!nat \rightsquigarrow (\Lambda\alpha.\lam x{:}\alpha.x)\lceil nat\rceil$}
+\end{prooftree}
+
+The examples are symmetric to those shown for typing. We now show, beyond aesthetic symmetries, that learning from types and typing are equivalent.
+
+\section{Metatheory}
+
+\subsection{Typing and Learning are equivalent}
+Learning should obey progress, preservation, and normalization. By proving equivalence between typing and learning, we show that learning does obey these properties.
+
+\begin{lemma}[\textsc{Completeness of Learning}]
+If $\,\Gamma \vdash e : \tau$ then $\,\Gamma \vdash \tau \rightsquigarrow e$
+\label{completeness-learning}
+\end{lemma}
+\begin{proof}
+Induction on the typing rules.
+\end{proof}
+\vspace*{-1.2em}
+
+\begin{lemma}[\textsc{Soundness of Learning}]
+If $\,\Gamma \vdash \tau \rightsquigarrow e$ then $\Gamma \vdash e : \tau$
+\label{soundness-learning}
+\end{lemma}
+\begin{proof}
+Induction on the learning rules.
+\end{proof}
+\vspace*{-1.2em}
+
+\begin{theorem}[\textsc{Equivalence of Typing and Learning}]
+If and only if $\,\Gamma \vdash \tau \rightsquigarrow e$ then $\Gamma \vdash e : \tau$
+\label{equivalence-learning}
+\end{theorem}
+\begin{proof}
+Directly from Lemmas \ref{completeness-learning} and \ref{soundness-learning}.
+\end{proof}
+\vspace*{-1.2em}
+
+Because we can only learn a program if and only if it is well typed, it follows that learned programs obey progress, preservation, and normalization. Each proof invokes the equivalence theorem between typing and learning, and then the respective progress, preservation, and normalization theorems for typing.
+
+\subsection{Learned programs don't get stuck}
+
+\begin{corollary}[\textsc{Progress in Learning}]
+If $e$ is a closed, learned program, then either $e$ is a value or else there is some program $e'$ such that $e \to_\beta e'$.
+\label{progress-learning}
+\end{corollary}
+\begin{proof}
+Directly from Theorems \ref{equivalence-learning} and \ref{progress-typing}.
+\end{proof}
+\vspace*{-1.2em}
+
+We shouldn't be able to learn programs which get stuck during evaluation, same as with typing. If I learn a program, either its a value or it can be evaluated to another program. 
+
+\subsection{Learned programs don't change type}
+
+\begin{corollary}[\textsc{Preservation in Learning}]
+If $\,\Gamma \vdash \tau \rightsquigarrow e$ and $e \to_\beta e'$, then $\Gamma \vdash \tau \rightsquigarrow e'$.
+\label{preservation-learning}
+\end{corollary}
+\begin{proof}
+Directly from Theorems \ref{equivalence-learning} and \ref{preservation-typing}. 
+\end{proof}
+\vspace*{-1.2em}
+
+We shouldn't be able to learn programs of a different type than the one provided. If I learn a program, and it evaluates to another program, then I should be able to learn that new program from the same type.
+
+\subsection{Learned programs always halt}
+
+\begin{corollary}[\textsc{Normalization in Evaluation}]
+Learned programs in System F always evaluate to a value, to a normal form.
+\label{normalization-learning}
+\end{corollary}
+\begin{proof}
+Directly from Theorems \ref{equivalence-learning} and \ref{normalization-evaluation}. 
+\end{proof}
+\vspace*{-1.2em}
+
+We shouldn't be able to learn programs which never finish computing. They must halt. This means we take a hit on the expressivity of programs we can learn. But for this sensible sacrifice, we can learn from examples in a decidable way. And despite the sacrifice in expressivity, there is still many useful programs you can learn from types. The next section shows that within System F you can learn the encodings for lists, products, and sum types. These encodings then let you learn many of the programs that programmers are interested in, e.g. operations on lists, tuples, and pattern matching.
+
+\section{Learning lists, products, and sums}
+
+System F can learn the encodings for lists, products, and sums. In subsequent sections I prove these encodings are learnable. This has two aims. First, to illustrate how I go about proving that programs are learnable. Second, because the encodings for lists, products, and sums are used in the definition of learning from examples, the extended learning relation presented next chapter. All encodings shown come from those in \cite{girard1989proofs}.
+
+\subsection{Learning the list encoding}
+
+The type $List\, \tau$ is a list of type $\tau$, a finite sequence $[x_1,\dots,x_n]$ where each element is type $\tau$. We want programs like this to be learnable in System F:\vspace*{-1.0em}
+\begin{singlespace}
+$$\Gamma \vdash List\, nat \rightsquigarrow [1,2,3]$$
+\end{singlespace}
+To show this, System F must be able to learn the list constructors. These are $Nil$ and $Cons$. For lists of type $\tau$, $Nil$ denotes the empty list of type $\tau$.  $Cons$ is an operation which takes an element of type $\tau$ and appends it to the head of a list of type $\tau$. To learn the list $[1,2,3]$, you need to learn $Cons(1,(Cons(2,Cons(3,Nil)))).$
+
+Let the following be encodings for lists of type $\tau$ and the constructors $Nil$ and $Cons$:
+\begin{align*}
+List\, \tau &\equiv \forall\alpha.\alpha \!\to\! (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \\
+Nil &\equiv \Lambda\alpha.\lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).x \\
+Cons\,h\,t &\equiv \Lambda\alpha.\lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).yh(t \alpha x y)
+\end{align*}
+
+\begin{lemma}[\textsc{Nil is learnable}]
+$\cdot \vdash List\,\tau \rightsquigarrow Nil$
+\end{lemma}
+\begin{proof}
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$x{:}\alpha \in \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$\alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow x$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$\alpha, x{:}\alpha \vdash (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).x$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$\alpha \vdash \alpha \!\to\! (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).x$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$\cdot \vdash \forall\alpha.\alpha \!\to\! (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \Lambda\alpha.\lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).x$}
+\end{prooftree}
+\end{proof}
+
+\begin{lemma}[\textsc{Cons is learnable}]
+$h{:}\tau, t{:}List\,\tau \vdash List\,\tau \rightsquigarrow Cons \,h\, t$
+\end{lemma}
+
+\begin{proof}
+\begin{enumerate}[label=\textit{(\roman*)}]
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \tau \!\to\!\alpha\!\to\!\alpha \rightsquigarrow y$
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \in h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash (\tau \!\to\! \alpha \!\to\! \alpha) \rightsquigarrow y$}
+	\RightLabel{\textsc{(L-TApp)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \tau \!\to\!\alpha\!\to\!\alpha \rightsquigarrow y$}
+\end{prooftree}
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha\!\to\!\alpha \rightsquigarrow yh$
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(i)}}
+	\AxiomC{$h{:}\tau \in h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \tau \rightsquigarrow h$}
+	\RightLabel{\textsc{(L-TApp)}}
+	\BinaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha\!\to\!\alpha \rightsquigarrow yh$}
+\end{prooftree}
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \forall\alpha.\alpha \!\to\!(\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t$
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$t{:}List\,\tau \in h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \forall\alpha.\alpha \!\to\!(\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t$}
+\end{prooftree}
+
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \!\to\!(\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t \lceil\alpha\rceil$
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(iii)}}
+	\RightLabel{\textsc{(L-Abs)}}
+	\AxiomC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow \alpha$}
+	\RightLabel{\textsc{(L-TApp)}}
+	\BinaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \!\to\!(\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t \lceil\alpha\rceil$}
+\end{prooftree}
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t \lceil\alpha\rceil x$
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(iv)}}
+	\RightLabel{\textsc{(L-Abs)}}
+	\AxiomC{$x{:}\alpha \in h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow x$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow t \lceil\alpha\rceil x$}
+\end{prooftree}
+
+\item $h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow t \lceil\alpha\rceil x y$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(v)}}
+	\RightLabel{\textsc{(L-Abs)}}
+	\AxiomC{$y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \in h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha)$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow y$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow t \lceil\alpha\rceil x y$}
+\end{prooftree}
+
+\item $h{:}\tau, t{:}List\,\tau \vdash List\,\tau \rightsquigarrow Cons \,h\, t$ \begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(ii)}}
+	\AxiomC{\textit{(vi)}}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha, y{:}(\tau \!\to\! \alpha \!\to\! \alpha) \vdash \alpha \rightsquigarrow yh(t \lceil\alpha\rceil x y)$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha, x{:}\alpha \vdash (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).yh(t \lceil\alpha\rceil x y)$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau, \alpha \vdash \alpha \!\to\! (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).yh(t \lceil\alpha\rceil x y)$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$h{:}\tau, t{:}List\,\tau \vdash \forall\alpha.\alpha \!\to\! (\tau \!\to\! \alpha \!\to\! \alpha) \!\to\! \alpha \rightsquigarrow \Lambda\alpha.\lam x{:}\alpha.\lam y{:}(\tau\!\to\!\alpha\!\to\!\alpha).yh(t \lceil\alpha\rceil x y)$}
+\end{prooftree}
+
+\end{enumerate}
+\end{proof}
+
+Using this encoding, it's possible to construct the list $[1,2,3]$ by constructing the program $Cons(1,(Cons(2,Cons(3,Nil))))$. We omit the proof of useful, yet tertiary list operations like $Fold$, $Map$, and $Reduce$---the sort often used in functional programming languages. These are learnable in System F, but not strictly necessary for presenting learning from examples.
+
+\subsection{Learning the product encoding}
+
+The type $\tau_a \!\times\! \tau_b$ is a tuple $\langle a,b\rangle$ where $a$ is type $\tau_a$ and $b$ is type $\tau_b$. Tuples, unlike lists, can have elements of different types. We want programs like this to be learnable in System F:\vspace{-1.0em}
+\begin{singlespace}
+$$\Gamma \vdash nat\!\times\! nat \rightsquigarrow \langle1,2\rangle$$
+\end{singlespace}
+To show this, System F must be able to learn the product constructor $\langle a,b\rangle$. Its an operation which takes an element $a$ of type $\tau_a$ and joins it in a tuple with an element $b$ of type $\tau_b$. Additionally, I show that System F can learn the projection functions, $\pi_1 t$ and $\pi_2 t$. Each take as input a tuple and project the first and second element respectively. For instance, $\pi_1\langle 1,2\rangle \to_\beta 1$.
+
+Let the following be encodings for tuples of type $\tau_a\!\times\!\tau_b$ and the projections :
+\begin{align*}
+\tau_a\!\times\!\tau_b &\equiv \forall\alpha.(\tau_a\!\to\!\tau_b\!\to\!\alpha)\!\to\! \alpha\\
+\langle a,b\rangle &\equiv \Lambda\alpha.\lam x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha).xab\\
+\pi_1t &\equiv t\lceil\tau_a\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.x)\\
+\pi_2t &\equiv t\lceil\tau_b\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.y)
+\end{align*}
+
+\begin{lemma}[\textsc{Products are learnable}]
+$a{:}\tau_a, b{:}\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow \langle a,b\rangle$
+\end{lemma}
+\begin{proof}
+\begin{enumerate}[label=\textit{(\roman*)}]
+
+\item $a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash (\tau_a\!\to\!\tau_b\!\to\!\alpha) \rightsquigarrow x$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \in a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \tau_a \rightsquigarrow a$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash (\tau_a\!\to\!\tau_b\!\to\!\alpha) \rightsquigarrow x$}
+\end{prooftree}
+
+\item $a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \tau_b\!\to\!\alpha \rightsquigarrow xa$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(i)}}
+	\RightLabel{\textsc{(L-Var)}}
+	\AxiomC{$a{:}\tau_a \in a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha)$}
+	\UnaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \tau_a \rightsquigarrow a$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \tau_b\!\to\!\alpha \rightsquigarrow xa$}
+\end{prooftree}
+
+\item $a{:}\tau_a, b{:}\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow \langle a,b\rangle$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(ii)}}
+	\RightLabel{\textsc{(L-Var)}}
+	\AxiomC{$b{:}\tau_b \in a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha)$}
+	\UnaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \tau_b \rightsquigarrow b$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha, x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha) \vdash \alpha \rightsquigarrow xab$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$a{:}\tau_a, b{:}\tau_b, \alpha \vdash (\tau_a\!\to\!\tau_b\!\to\!\alpha)\!\to\! \alpha \rightsquigarrow \lam x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha).xab$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$a{:}\tau_a, b{:}\tau_b \vdash \forall\alpha.(\tau_a\!\to\!\tau_b\!\to\!\alpha)\!\to\! \alpha \rightsquigarrow \Lambda\alpha.\lam x{:}(\tau_a\!\to\!\tau_b\!\to\!\alpha).xab$}
+\end{prooftree}
+
+\end{enumerate}
+\end{proof}
+
+\begin{lemma}[\textsc{First projection is learnable}]
+$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a \rightsquigarrow \pi_1t$
+\end{lemma}
+\begin{proof}
+\begin{enumerate}[label=\textit{(\roman*)}]
+
+\item $t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow t$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$t{:}\tau_a\!\times\!\tau_b \in t{:}\tau_a\!\times\!\tau_b$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow t$}
+\end{prooftree}
+
+\item $t{:}\tau_a\!\times\!\tau_b \vdash \tau_a \rightsquigarrow t\lceil\tau_a\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.x)$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(i)}}
+	\AxiomC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a	 \rightsquigarrow \tau_a$}
+	\BinaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash (\tau_a\!\to\!\tau_b\!\to\!\tau_a)\!\to\!\tau_a \rightsquigarrow t\lceil\tau_a\rceil$}
+	\AxiomC{$x{:}\tau_a \in t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a, y{:}\tau_b$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a, y{:}\tau_b \vdash \tau_a \rightsquigarrow x$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a \vdash \tau_b\!\to\!\tau_a \rightsquigarrow \lam y{:}\tau_b.x$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\to\!\tau_b\!\to\!\tau_a \rightsquigarrow \lam x{:}\tau_a.\lam y{:}\tau_b.x$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a \rightsquigarrow t\lceil\tau_a\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.x)$}
+\end{prooftree}
+
+\end{enumerate}
+\end{proof}
+
+\begin{lemma}[\textsc{Second projection is learnable}]
+$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a \rightsquigarrow \pi_2t$
+\end{lemma}
+\begin{proof}
+\begin{enumerate}[label=\textit{(\roman*)}]
+
+\item $t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow t$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$t{:}\tau_a\!\times\!\tau_b \in t{:}\tau_a\!\times\!\tau_b$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\times\!\tau_b \rightsquigarrow t$}
+\end{prooftree}
+
+\item $t{:}\tau_a\!\times\!\tau_b \vdash \tau_b \rightsquigarrow t\lceil\tau_b\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.x)$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(i)}}
+	\AxiomC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_b	 \rightsquigarrow \tau_b$}
+	\BinaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash (\tau_a\!\to\!\tau_b\!\to\!\tau_b)\!\to\!\tau_b \rightsquigarrow t\lceil\tau_b\rceil$}
+	\AxiomC{$y{:}\tau_b \in t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a, y{:}\tau_b$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a, y{:}\tau_b \vdash \tau_b \rightsquigarrow y$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b, x{:}\tau_a \vdash \tau_b\!\to\!\tau_b \rightsquigarrow \lam y{:}\tau_b.y$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_a\!\to\!\tau_b\!\to\!\tau_b \rightsquigarrow \lam x{:}\tau_a.\lam y{:}\tau_b.y$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$t{:}\tau_a\!\times\!\tau_b \vdash \tau_b \rightsquigarrow t\lceil\tau_b\rceil(\lam x{:}\tau_a.\lam y{:}\tau_b.y)$}
+\end{prooftree}
+
+\end{enumerate}
+\end{proof}
+
+Using this encoding, it's possible to construct the tuple $\langle1,2\rangle$ and project its first and second element.
+
+
+\subsection{Learning the sum encoding}
+
+The type $\tau_a\!+\!\tau_b$ is a sum of types $\tau_a$ and $\tau_b$. Many types can naturally be framed as sums. Consider booleans, which are always either $true$ or $false$. Their encodings in System F are $\Lambda\alpha.\lam x{:}\alpha.\lam y{:}\alpha.x$ and $\Lambda\alpha.\lam x{:}\alpha.\lam y{:}\alpha.y$ respectively, each of type $bool \equiv \forall\alpha.\alpha\!\to\!\alpha\!\to\!\alpha$. Sums are useful because they let us do case analysis. If we treat $true$ and $false$ as comprising as sum type $bool\!+\!bool$ then we can construct programs which do different things depending on whether its input is $true$ or $false$. We want programs like this to be learnable in System F:\vspace{-1.0em}
+\begin{singlespace}
+$$\Gamma \vdash bool\!+\!bool \rightsquigarrow case(e)\,of\, \iota_1(true) \mapsto false \mid \iota_2(false) \mapsto true$$
+\end{singlespace}
+This program is $not$, which takes a boolean and inverts it. It does a case analysis on its input $e$. If it's $true$ wrapped by the injector $\iota_1$, it returns $false$. If it's $false$ wrapped by the injector $\iota_2$, it returns $true$. The injectors construct sum types. Typically, $true$ is of type $bool$. But wrapped with an injector, it's type becomes $bool+bool$, permitting us to do case analysis. To learn this program, we must show System F can learn the encodings for case analysis and injectors.
+
+Let the following be encodings for sums of type $\tau_a\!+\!\tau_b$:
+\begin{align*}
+\tau_a\!+\!\tau_b &\equiv \forall\alpha.(\tau_a\!\to\!\alpha)\!\to\!(\tau_b\!\to\!\alpha)\!\to\!\alpha\\
+\iota_1(e) &\equiv \Lambda\alpha.\lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.fe\\
+\iota_2(e) &\equiv \Lambda\alpha.\lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.ge\\
+case(e)\,of\, \iota_1(x) \mapsto z_1 \mid \iota_2(y) \mapsto z_2 &\equiv e\lceil\tau_c\rceil(\lam x{:}\tau_a.z_1)(\lam y{:}\tau_b.z_2)
+\end{align*}
+
+
+\begin{lemma}[\textsc{First injector is learnable}]
+$e{:}\tau_a \vdash \tau_a\!+\!\tau_b \rightsquigarrow \iota_1(e)$
+\end{lemma}
+\begin{proof}
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$f{:}\tau_a\!\to\!\alpha \in e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha$}
+	\UnaryInfC{$e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \tau_a\!\to\!\alpha \rightsquigarrow f$}
+	\AxiomC{$e{:}\tau_a \in e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \tau_a \rightsquigarrow e$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \alpha \rightsquigarrow fe$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_a, \alpha, f{:}\tau_a\!\to\!\alpha \vdash (\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \lam g{:}\tau_b\!\to\!\alpha.fe$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_a, \alpha \vdash (\tau_a\!\to\!\alpha)\!\to\!(\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.fe$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$e{:}\tau_a \vdash \forall\alpha.(\tau_a\!\to\!\alpha)\!\to\!(\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \Lambda\alpha.\lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.fe$}
+\end{prooftree}
+\end{proof}
+
+\begin{lemma}[\textsc{Second injector is learnable}]
+$e{:}\tau_b \vdash \tau_a\!+\!\tau_b \rightsquigarrow \iota_2(e)$
+\end{lemma}
+\begin{proof}
+
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$g{:}\tau_b\!\to\!\alpha \in e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha$}
+	\UnaryInfC{$e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \tau_b\!\to\!\alpha \rightsquigarrow g$}
+	\AxiomC{$e{:}\tau_b \in e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \tau_b \rightsquigarrow e$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha, g{:}\tau_b\!\to\!\alpha \vdash \alpha \rightsquigarrow ge$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_b, \alpha, f{:}\tau_a\!\to\!\alpha \vdash (\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \lam g{:}\tau_b\!\to\!\alpha.ge$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_b, \alpha \vdash (\tau_a\!\to\!\alpha)\!\to\!(\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.ge$}
+	\RightLabel{\textsc{(L-TAbs)}}
+	\UnaryInfC{$e{:}\tau_b \vdash \forall\alpha.(\tau_a\!\to\!\alpha)\!\to\!(\tau_b\!\to\!\alpha)\!\to\!\alpha \rightsquigarrow \Lambda\alpha.\lam f{:}\tau_a\!\to\!\alpha.\lam g{:}\tau_b\!\to\!\alpha.ge$}
+\end{prooftree}
+\end{proof}
+
+\begin{lemma}[\textsc{Case analysis is learnable}]
+$e{:}\tau_a\!+\!\tau_b , x{:}\tau_a, y{:}\tau_b \vdash \tau_c \rightsquigarrow case(e)\,of\, \iota_1(x) \mapsto z_1 \mid \iota_2(y) \mapsto z_2$
+\end{lemma}
+\begin{proof}
+\begin{enumerate}[label=\textit{(\roman*)}]
+
+\item $e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash (\tau_a\!\to\!\tau_c)\!\to\!(\tau_b\!\to\!\tau_c)\!\to\!\tau_c \rightsquigarrow e\lceil\tau_c\rceil$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{$e{:}\tau_a\!+\!\tau_b \in e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_a\!+\!\tau_b \rightsquigarrow e$}
+	\AxiomC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_c \rightsquigarrow \tau_c$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash (\tau_a\!\to\!\tau_c)\!\to\!(\tau_b\!\to\!\tau_c)\!\to\!\tau_c \rightsquigarrow e\lceil\tau_c\rceil$}
+\end{prooftree}
+
+
+\item $e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash (\tau_b\!\to\!\tau_c)\!\to\!\tau_c \rightsquigarrow e\lceil\tau_c\rceil(\lam x{:}\tau_a.z_1)$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(ii)}}
+	\AxiomC{$z_1{:}\tau_c \in e{:}\tau_a\!+\!\tau_b, x{:}\tau_as, z_1{:}\tau_c, z_2{:}\tau_c$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$e{:}\tau_a\!+\!\tau_b,x{:}\tau_a, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_a\!\to\!\tau_c \rightsquigarrow z_1$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_a\!\to\!\tau_c \rightsquigarrow \lam x{:}\tau_a.z_1$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash (\tau_b\!\to\!\tau_c)\!\to\!\tau_c \rightsquigarrow e\lceil\tau_c\rceil(\lam x{:}\tau_a.z_1)$}
+\end{prooftree}
+
+\item $e{:}\tau_a\!+\!\tau_b , z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_c \rightsquigarrow e\lceil\tau_c\rceil(\lam x{:}\tau_a.z_1)(\lam y{:}\tau_b.z_2)$
+\begin{prooftree}
+\def\extraVskip{4pt}
+\def\labelSpacing{4pt}
+	\AxiomC{\textit{(iii)}}
+	\AxiomC{$z_2{:}\tau_c \in e{:}\tau_a\!+\!\tau_b, y{:}\tau_b, z_1{:}\tau_c, z_2{:}\tau_c$}
+	\RightLabel{\textsc{(L-Var)}}
+	\UnaryInfC{$e{:}\tau_a\!+\!\tau_b, y{:}\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_c \rightsquigarrow z_2$}
+	\RightLabel{\textsc{(L-Abs)}}
+	\UnaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_b\!\to\!\tau_c \rightsquigarrow \lam y{:}\tau_b.z_2$}
+	\RightLabel{\textsc{(L-App)}}
+	\BinaryInfC{$e{:}\tau_a\!+\!\tau_b, z_1{:}\tau_c, z_2{:}\tau_c \vdash \tau_c \rightsquigarrow e\lceil\tau_c\rceil(\lam x{:}\tau_a.z_1)(\lam y{:}\tau_b.z_2)$}
+\end{prooftree}
+\end{enumerate}
+\end{proof}
+
+Using this encoding, it's possible to construct the program described earlier, $case(e)\,of\, \iota_1(true) \mapsto false \mid \iota_2(false) \mapsto true$. You can construct and deconstruct sums with this encoding.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

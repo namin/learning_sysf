@@ -1,0 +1,138 @@
+% (TO-DO)
+% - Acknowledgements
+% - Abstract
+% - Finish Chapter 5
+% - Finish Equivalence Proof
+
+\documentclass[11pt]{ociamthesis} 
+
+% Load any additional packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath,amsthm,amssymb,amsfonts,wasysym,bussproofs}
+\usepackage{booktabs,changepage}
+\usepackage{lipsum}
+\usepackage{libertine}
+\usepackage[libertine]{newtxmath}
+
+\usepackage{setspace}
+
+\usepackage{titlesec,epigraph, listings}
+\usepackage{etoolbox}
+\usepackage{enumitem}
+
+
+% Commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\lam}{\lambda}
+
+% Environments %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{lineno}
+%\linenumbers
+
+\renewenvironment{abstract}
+    {\begin{adjustwidth}{1.0em}{1.0em}\underline{\textsc{Abstract}}\\}
+    {\end{adjustwidth}}
+
+\renewenvironment{proof}
+    {\textit{Proof.}}
+    {\qed\\}
+    
+\newtheoremstyle{mytheoremstyle} % name
+    {}                    % Space above
+    {}                    % Space below
+    {\itshape}                   % Body font
+    {}                 % Indent amount
+    {\bfseries}                  % Theorem head font
+    {.}                          % Punctuation after theorem head
+    {\newline}                      % Space after theorem head
+    {}                           % Theorem head spec (can be left empty, meaning ‘normal’)
+\theoremstyle{mytheoremstyle}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+
+% Custom Headers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\titleformat{\chapter}[display]
+{\filcenter}
+{\titlerule[1pt]%
+\vspace{1pt}%
+\titlerule
+\vspace{1pc}%
+\LARGE\scshape{\chaptertitlename} \thechapter}
+{1pc}
+{\titlerule
+\vspace{1pc}%
+\scshape\huge}
+
+\titleformat{\section}
+  {\scshape \Large \fontsize{16}{19}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\scshape \large \fontsize{16}{19}}{\thesubsection}{1em}{}
+
+% Fixes section numbering
+\makeatletter
+\patchcmd{\ttlh@hang}{\parindent\z@}{\parindent\z@\leavevmode}{}{}
+\patchcmd{\ttlh@hang}{\noindent}{}{}{}
+\makeatother
+
+% Fixes quotations
+\usepackage [english]{babel}
+\usepackage [autostyle, english = american]{csquotes}
+\MakeOuterQuote{"}
+
+
+% Title information %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Learning in System F}   %note \\[1ex] is a line break in the title
+
+\author{Joey Velez-Ginorio}             %your name
+\college{}                %your college
+
+%\renewcommand{\submittedtext}{change the default text here if needed}
+\degree{Master of Science in Mathematics and Foundations of Computer Science}     %the degree
+\degreedate{Trinity 2019}         %the degree date
+
+% Start document %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%set the number of sectioning levels that get number and appear in the contents
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+\maketitle                  % create a title page from the preamble info
+\include{dedication}        % include a dedication.tex file
+\include{acknowledgements}  % include an acknowledgements.tex file
+\include{abstract}          % include the abstract
+
+
+\begin{romanpages}          % start roman page numbering
+
+\begin{singlespace}
+\tableofcontents            % generate and include a table of contents
+\end{singlespace}
+
+\end{romanpages}            % end roman page numbering
+
+%now include the files of latex for each of the chapters etc
+\include{chapter1}
+\include{chapter2}
+\include{chapter3}
+\include{chapter4}
+\include{chapter5}
+\include{conclusions}
+
+%now enable appendix numbering format and include any appendices
+\appendix
+\include{appendix1}
+\include{appendix2}
+
+%next line adds the Bibliography to the contents page
+\addcontentsline{toc}{chapter}{Bibliography}
+%uncomment next line to change bibliography name to references
+%\renewcommand{\bibname}{References}
+\begin{singlespace}
+\bibliography{refs}        %use a bibtex bibliography file refs.bib
+\bibliographystyle{plain}  %use the plain bibliography style
+\end{singlespace}
+
+\end{document}
+
+
+

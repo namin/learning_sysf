@@ -1,0 +1,111 @@
+\chapter{To learn a program}
+\begin{singlespace}
+\setlength{\epigraphwidth}{0.6\textwidth}
+\epigraph{\textit{The term "learning", like a lot of other everyday terms, is used broadly and vaguely in the English language, and we carry those broad and vague usages over to technical fields, where they often cause confusion.}}{\textsc{Herbert Simon \\  Why should machines learn? (1983)}}
+\end{singlespace}
+
+\section{The verb, learn}
+My uncle taught me chess. First, he laid down the facts. Bishops do this. Knights do that. You want to checkmate. From there, the rules were laid out. Ideally, I should have learned chess then. But I didn't. My attention lapsed and sometimes I forgot which piece did what. These gaps however, were filled by playing. Whatever sense I had of chess quickly revised itself. Examples of play helped me learn chess.
+
+To learn chess, I don't mean anything mysterious. To learn chess is to know its rules. These tell you what moves you can and can't make. And what conditions must be met to win or lose. If I think bishops only move forward, I haven't learned chess. If I know bishops move diagonally, I'm learning chess. 
+
+To learn a program, I don't mean anything mysterious. To learn a program is to know its rules, its instructions. These tell you what computation it does and does not do. If I think \textsc{helloWorld} only prints "hello", I have not learned \textsc{helloWorld}\footnote{\textsc{helloWorld} is a famous test program. It prints out the words "hello, world". Its adoption traces back to a 1974 memo from Bell Labs by Brian Kerrighan. \cite{kernighan1974programming}}:
+\begin{singlespace}
+\begin{align*}
+&\textbf{ma}\textbf{{in}}\text{( )\{}\\
+&\textbf{\hspace{2.3em}printf}\text{("hello, world{\small\textbackslash}n");}\\
+\}&
+\end{align*}
+\end{singlespace}
+
+\section{Humans learn programs}
+Uncontroversially, humans learn programs. Hordes of programmers learn programs everyday. Programs like \textsc{helloWorld} are often the first they learn. It was my first.
+
+But we can push the idea further. Maybe programmers aren't the only ones learning programs. What if we all do? If the brain really is a computer, then to learn a concept is to learn a program.
+
+\subsection{A recurrent observation}
+
+In 1666, Leibniz said human reasoning is computation \cite{leibniz1989dissertation}. He envisioned the \textit{characteristica universalis}\footnote{Universal characteristic}: a formal language for expressing all thoughts, all concepts. Paired with his calculus ratiocinator\footnote{A framework for computation, predating mathematical logic. Leibniz built a machine called the Stepped Reckoner, using the calculus ratiocinator as its model of computation.}, Leibniz mused over machines which could think like us. His works anticipate the development of symbolic logic and the formal foundations of computation we enjoy today. 
+
+In 1843, Lovelace translates a lecture on Babbage's analytical engine, the precursor to modern programmable computers. She has a fundamental realization. In the notes of her translation, she remarks \cite{lovelacenotes}:
+
+\begin{displayquote}
+\begin{singlespace}
+\textit{Again, it might act upon other things besides number.....Supposing, for instance, that the fundamental relations of pitched sounds in the science of harmony and of musical composition were susceptible of such expression and adaptations, the engine might compose elaborate and scientific pieces of music of any degree of complexity or extent.}
+\end{singlespace}
+\end{displayquote}
+
+A machine designed to compute with numbers is not restricted to reason over numbers. Numbers can denote more, like the "relations of pitched sounds." From which to reason about numbers is to reason about music, to create music.
+
+In 1958, Von Neumann's unfinished notes for Yale's Silliman lectures are published posthumously. They're titled "The Computer and the Brain"  \cite{von2012computer}. He muses on the correspondence between computation and human thought, except now in reference to the brain. 
+
+\subsection{A current controversy}
+
+The recurrent observation, a correspondence between human thought and computation, led to the inception of cognitive science in the 1970s. The observation lives on with tenuous status. That is, it's an open question as to how strict to interpret the correspondence, or even if it holds. Are brains literally computers, something like a computer, or something else entirely?
+
+Opposition to the correspondence emerges in the dynamical systems approach. It claims that counter to orthodoxy, the brain is not a computer but instead a dynamical system \cite{van1998dynamical}. A growing body of empirical work substantiates the approach \cite{mcclelland2010letting}.
+
+Yet empirical work also substantiates the correspondence. Many works, including some of my own, show that you can predict what people learn when you treat learning as learning programs. \cite{griffiths2010probabilistic,  velez2017interpreting, lake2015human}. It leaves cognitive science in a thorny situation. Robust empirical work support both, opposing views.\footnote{It's possible that these are complentary, not competing views. This is argued in \cite{clark1997dynamical}. However, to date the views are often framed in opposition.}
+
+Despite this, I'm inspired by the controversy. My alliances are with the pioneers of computing, that there is a real correspondence between human thought and computers. 
+
+The current work aims to explore the correspondence. If the brain is a computer, then it's programs are written in a peculiar programming language. One which lets us both write and learn the programs which govern our behavior. What might that language look like?
+
+\section{Computers learn programs}
+
+Program synthesis, type inhabitance, inductive programming, and theorem proving \cite{gulwani2017program}. Different names for the same problem: learning programs from data. Sometimes the programs are proofs, sometimes they're terms.\footnote{The equivalence between programs, terms, and proofs is established by the Curry-Howard correspondence. \cite{wadler2015propositions}} Sometimes data are examples, sometimes they're types. Yet the aim is the same.
+
+What might a programming language look like, if its programs could also be learned by machines? To moment, the literature consists of languages which explicitly introduce machinery to enable learning. They are useful to discuss before beginning on the greater exposition---learning in System F, a presentation which avoids explicitly introducing machinery.
+
+\subsection{Rosette}
+Rosette is a programming language which extends Racket with machinery for synthesis, or learning \cite{torlak2013growing}. It imbues the language with SMT solvers.\footnote{Satisfiability modulo theories (SMT) is a spin on the satisfiability problem, where one checks whether a boolean formulae is satisfied by a certain set of assignments to its variables. \cite{barrett2018satisfiability}} With them, it's possible to write programs with holes, called sketches \cite{solar2008program}, which an SMT solver can fill. If a sketch has holes amenable to reasoning via SMT, Rosette can be quite effective.
+
+For instance, recent work shows Rosette can reverse-engineer parts of an ISA \cite{zornsolver}---the instruction set architecture of a CPU (central processing unit). From bit-level data, you can recover programs which govern the behavior of the CPU. This works because SMT solvers support reasoning about bit-vector arithmetic, the sort of arithmetic governing low-level behavior of CPUs \cite{kroening2016decision}.
+
+\subsection{Synquid}
+Synquid is a programming language which uses refinement types to learn programs \cite{polikarpova2016program}. A refinement type lets you annotate programs with types containing logical predicates \cite{freeman1994refinement}. The logical predicates constrain the space of programs which inhabit that type, and are used to guide learning. 
+
+Consider learning with and without refinement types. I'm going to teach you a program. But all I'll say is that its of type $nat \!\to\! nat$. It takes a natural number, and returns a natural number. Any ideas? Perhaps a program which computes...
+$$f(x) = x, \;\;\;\;\;\;f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2,\;\;\;\;\;\; f(x) = x + \cdots$$
+The good news is that $f(x) = x + 1$ is correct. The bad news is that the data (type) let you learn a slew of other programs too. It doesn't constrain learning enough if I want to teach $f(x) = x + 1$. Enter refinement types, which let data be specific.
+
+Round 2. I'm going to teach you a program. But all I'll say is that its of type $x{:}nat \!\to \!\{y{:}nat \mid y = x + 1\}$. It takes a natural number $x$, and returns a natural number $y$ one greater than $x$. Any ideas? Perhaps a program which computes...
+$$f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2 - 1,\;\;\;\;\;\; f(x) = x + 3 - 2,\;\;\;\;\;\;\cdots$$
+The good news is that $f(x) = x + 1$ is correct. And so are all the other programs, as long as I'm agnostic to implementation details. Refinement types impose useful constraints on learning, it's the crux of Synquid.
+
+\subsection{Myth}
+Myth is a programming language which uses types and examples to learn programs \cite{osera2015program}. Types, like in Synquid, let you annotate programs by their behavior. But Myth doesn't use refinement types, its types aren't as expressive. Let's see how Myth constrains learning without refinement types.
+
+I'm going to teach you a program. But all I'll say is that its of type $nat \!\to\! nat$. Frustrated, you point out that you have several programs in mind, and can't discern which is correct from my teaching...
+$$f(x) = x, \;\;\;\;\;\;f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2,\;\;\;\;\;\; f(x) = x + \cdots$$
+Your frustration compels me to offer an example of how I want the program to work. When given $1$, the program should return $2$: $f(1) = 2$. Frustrations settle and you rightly suspect the correct program to compute $f(x) = x + 1$. 
+
+Instead of deferring to richer types, Myth offers examples to constrain learning. Examples are nice because they're often convenient to provide, and at times easier to provide than richer types. Think of the difference between teaching chess by explaining all its principles, versus teaching chess by playing. In practice, a mix of both tends to do the trick. Formally specifying the rules, but also letting example play guide learning as when my uncle taught me.
+
+\section{Why are we better?}
+
+\subsection{Programmer assistants, not programmers}
+Rosette, Synquid, and Myth are state of the art. Yet they each only learn small fractions of the programs that we learn. For example, I'm most interestered in computers which learn not only programs, but programming languages from examples. 
+
+To learn a programming language is to learn its compiler or interpreter. Compilers and interpreters are themselves nothing more than programs. But it's impossible to learn compilers from examples using a language like Myth. At best, Myth lets you learn simple interpreters for languages which let you do basic arithmetic, e.g. "2+1" evaluates to "3". And even then, only with lots of help from the data. 
+
+Across the board, computers mostly learn simple programs. They are more programmer assistants than full-fledged programmers. They manage simple tasks, letting programmers focus on the heavy lifting of programming. Is this all they'll ever be?
+\subsection{Seemingly, an impasse}
+
+At first glance, computability theory appears to settle the debate \cite{sipser2006introduction}. Computers will never program like us.
+\begin{theorem}[\textsc{Rice's Theorem}]
+For Turing-complete languages, all non-trivial semantic properties of programs are undecidable.
+\end{theorem}
+Semantic properties are about a program's behavior. Does it halt? Does $f(1) = 2$? And non-trivial properties are those which aren't true of every program, or false of every program. 
+
+Recall when I taught you the program which computes $f(x) = x + 1$ from examples. Given $1$ the program should return $2$: $f(1) = 2$. Checking that any program satisfies even this simple example is undecidable. Similar issues arise if you try to avoid examples, and go the route of more precise types like Synquid. There's no way around it if a computer programs in a Turing-complete language. Learning all programs is undecidable.
+
+But I program in OCaml, a Turing-complete language. Recently, I learned how to write a compiler in it. Something's off. If my brain is a computer, then Rice's theorem applies. Learning all OCaml programs is undecidable. 
+
+\subsection{A sensible sacrifice}
+
+Rice's theorem forces the hand. The brain isn't solving undecidable problems. So then how did I learn to write a compiler in OCaml? A way forward is through a sensible sacrifice.
+
+Learning all OCaml programs is undecidable. But I only ever learn a subset of programs in Turing-complete languages. In fact, I can only claim to have learned a subset---same as anyone else. Maybe my brain uses a programming language which isn't Turing-complete, but which can learn useful subsets of Turing-complete languages. A sensible sacrifice.
+
+The sacrifice lets us design languages for which Rice's Theorem doesn't hold. Non-trivial semantic properties can be decided. And I can learn to write compilers in OCaml. This is possible in System F.
