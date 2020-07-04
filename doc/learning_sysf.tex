@@ -82,7 +82,7 @@
   \city{Cambridge}
   \state{Massachusetts}
   \postcode{02139}
-  \country{United States of America}                    %% \country is recommended
+  \country{U.S.A.}                    %% \country is recommended
 }
 \email{joeyv@mit.edu}   
 
@@ -95,7 +95,7 @@
   \city{Cambridge}
   \state{Massachusetts}
   \postcode{02138}
-  \country{United States of America}                    %% \country is recommended
+  \country{U.S.A.}                    %% \country is recommended
 }
 \email{namin@seas.harvard.edu}
 
@@ -104,35 +104,16 @@
 %% Note: \begin{abstract}...\end{abstract} environment must come
 %% before \maketitle command
 \begin{abstract}
-Text of abstract \ldots.
+Program synthesis, type inhabitance, inductive programming, and theorem proving. Different names for the same problem: learning programs from data. Sometimes the programs are proofs, sometimes they’re terms. Sometimes data are examples, and sometimes they’re types. Yet the aim is the same. We want to construct a program which satisfies some data. We want to learn a program.
+
+What might a programming language look like, if its programs could also be learned? We give it data, and it learns a program from it. This work shows that System F yields a simple approach for learning from types and examples. Beyond simplicity, System F gives us a guarantee on the soundness and completeness of learning. We learn correct programs, and can learn all observationally distinct programs in System F. Unlike previous works, we don't restrict what examples can be. As a result, we show for the first time how to learn arbitrary higher-order programs in System F from types and examples. 
+
 \end{abstract}
-
-
-%% 2012 ACM Computing Classification System (CSS) concepts
-%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
-\begin{CCSXML}
-<ccs2012>
-<concept>
-<concept_id>10011007.10011006.10011008</concept_id>
-<concept_desc>Software and its engineering~General programming languages</concept_desc>
-<concept_significance>500</concept_significance>
-</concept>
-<concept>
-<concept_id>10003456.10003457.10003521.10003525</concept_id>
-<concept_desc>Social and professional topics~History of programming languages</concept_desc>
-<concept_significance>300</concept_significance>
-</concept>
-</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Software and its engineering~General programming languages}
-\ccsdesc[300]{Social and professional topics~History of programming languages}
-%% End of generated code
 
 
 %% Keywords
 %% comma separated list
-\keywords{keyword1, keyword2, keyword3}  %% \keywords are mandatory in final camera-ready submission
+\keywords{Program Synthesis, Type Theory, Inductive Programming}  %% \keywords are mandatory in final camera-ready submission
 
 
 %% \maketitle
@@ -144,35 +125,52 @@ Text of abstract \ldots.
 
 \section{Introduction}
 
-Text of paper \ldots
+% present SysF syntax/typechecking/eval at end
+\section{Learning from Types}
+% present the augmented relation
+% state completeness/soundness result? or prove...
+\section{Learning from Examples}
+% present the augmented relation
+% state completeness/soundness result
+
+\section{Implementation}
+% how to make combinatorial search easier
+% - enumerating normal form programs
+% - deducing operationally distinct type applications
+% - memoizing recurisve calls?
+% - algebraic data types let us use examples productively
+%    - sum types split examples
+%	 - product types generate subproblems
+\section{Experiments}
+\section{Discussion}
 
 
 %% Acknowledgments
-\begin{acks}                            %% acks environment is optional
+%%\begin{acks}                            %% acks environment is optional
                                         %% contents suppressed with 'anonymous'
   %% Commands \grantsponsor{<sponsorID>}{<name>}{<url>} and
   %% \grantnum[<url>]{<sponsorID>}{<number>} should be used to
   %% acknowledge financial support and will be used by metadata
   %% extraction tools.
-  This material is based upon work supported by the
-  \grantsponsor{GS100000001}{National Science
-    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
-  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
-  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
-  conclusions or recommendations expressed in this material are those
-  of the author and do not necessarily reflect the views of the
-  National Science Foundation.
-\end{acks}
+%%  This material is based upon work supported by the
+%%  \grantsponsor{GS100000001}{National Science
+%%    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+%%  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+%%  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+%%  conclusions or recommendations expressed in this material are those
+%%  of the author and do not necessarily reflect the views of the
+%%  National Science Foundation.
+%%\end{acks}
 
 
 %% Bibliography
-%\bibliography{bibfile}
+\bibliography{refs.bib}
 
 
 %% Appendix
-\appendix
-\section{Appendix}
+%%\appendix
+%%\section{Appendix}
 
-Text of appendix \ldots
+%%Text of appendix \ldots
 
 \end{document}
