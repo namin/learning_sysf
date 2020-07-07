@@ -124,23 +124,37 @@ What might a programming language look like, if its programs could also be learn
 
 
 \section{Introduction}
+\subsection{A tricky learning problem}
 
 Imagine we're teaching you a program. Your only data is the type $nat \!\to\! nat$. It takes a natural number, and returns a natural number. Any ideas? Perhaps a program which computes...
 $$f(x) = x, \;\;\;\;\;\;f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2,\;\;\;\;\;\; f(x) = x + \cdots$$
 The good news is that $f(x) = x + 1$ is correct. The bad news is that the data let you learn a slew of other programs too. It doesn't constrain learning enough if we want to teach $f(x) = x + 1$. As teachers, we can provide better data.
 
-Round 2. Imagine we're teaching you a program. But this time we give you an example of the program's behavior. Your data are the type $nat \!\to\! nat$ and an example $f(1) = 2$. It takes a natural number, and returns the successor. Any ideas? Perhaps a program which computes...
+Round 2. Imagine we're teaching you a program. But this time we give you an example of the program's behavior. Your data are the type $nat \!\to\! nat$ and an example $f(1) = 2$. It takes a natural number, and seems to return its successor. Any ideas? Perhaps a program which computes...
 $$f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2 - 1,\;\;\;\;\;\; f(x) = x + 3 - 2,\;\;\;\;\;\;\cdots$$
 The good news is that $f(x) = x + 1$ is correct. And so are all the other programs, as long as we're agnostic to some details. Types and examples impose useful constraints on learning. It's the data we use when learning in System F \cite{girard1989proofs}.
 
-Existing work can learn successor from similar data \cite{osera2015program, polikarpova2016program}. But suppose $nat$ is a church encoding. For some base type $A$, $nat \coloneqq (A \to A) \to (A \to A)$. Natural numbers are then higher-order functions. They take and return functions. Suddenly, existing work can no longer learn successor. 
+Existing work can learn successor from similar data \cite{osera2015program, polikarpova2016program}. But suppose $nat$ is a church encoding. For some base type $A$, $nat \coloneqq (A \to A) \to (A \to A)$. Natural numbers are then higher-order functions. They take and return functions. In this context, existing work can no longer learn successor. 
 
-The difficulty is with how to handle functions in the return type. The type $nat \!\to\! nat$ returns a function, a program of type $nat$. To learn correct programs, you need to ensure candidates are the correct type or that they obey examples. Imagine we want to verify that our candidate program $f$ obeys $f(1)=2$. With the church encoding, $f(1)$ is a function, and so is $2$. In other words, $f(1)=2$ requires that we decide the equivalence of functions---which is undecidable in a Turing-complete language \cite{sipser2006introduction}. Functions in the return type create this issue. There are two ways out:
+\subsection{A way forward}
+
+The difficulty is with how to handle functions in the return type. The type $nat \!\to\! nat$ returns a function, a program of type $nat$. To learn correct programs, you need to ensure candidates are the correct type or that they obey examples. Imagine we want to verify that our candidate program $f$ obeys $f(1)=2$. With the church encoding, $f(1)$ is a function, and so is $2$. To check $f(1)=2$ requires that we decide function equality---which is undecidable in a Turing-complete language \cite{sipser2006introduction}. Functions in the return type create this issue. There are two ways out.
 
 \begin{enumerate}
 \item Don't allow functions in the return type, keep Turing-completeness.
 \item Allow functions in the return type, leave Turing-completeness.
 \end{enumerate}
+
+Route 1 is the approach of existing work. They don't allow functions in the return type, but keep an expressive Turing-complete language for learning. This can be a productive move, as many interesting programs don't return functions.
+
+Route 2 is the approach we take in this work. We don't impose restrictions on the types or examples we learn from. We instead sacrifice Turing-completeness. We choose a language where function equality is decidable, but still expressive enough to learn interesting programs. Our work shows that this too is a productive move, as many interesting programs return functions. Moreover, taking this route helps us make several contributions in this work:
+\begin{itemize}
+\item Detail how to learn arbitrary higher-order programs in System F. (Section 2 \& 3)
+\item Prove the soundness and completeness of learning. (Section 2 \& 3)
+\item Provide an implementation of learning, extending strong theoretical guarantees in practice. (Section 4 \& 5)
+\end{itemize}
+
+
 
 
 % state issue with functions in return type
