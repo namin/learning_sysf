@@ -133,7 +133,20 @@ Round 2. Imagine we're teaching you a program. But this time we give you an exam
 $$f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2 - 1,\;\;\;\;\;\; f(x) = x + 3 - 2,\;\;\;\;\;\;\cdots$$
 The good news is that $f(x) = x + 1$ is correct. And so are all the other programs, as long as we're agnostic to some details. Types and examples impose useful constraints on learning. It's the data we use when learning in System F \cite{girard1989proofs}.
 
-Existing work can learn successor from similar data \cite{osera2015program, polikarpova2016program}. But suppose $nat$ is a church encoding. For some base type $A$, $nat \coloneqq (A \to A) \to (A \to A)$. Natural numbers are then higher-order functions which both take and return functions. Suddenly, existing work can no longer learn successor.
+Existing work can learn successor from similar data \cite{osera2015program, polikarpova2016program}. But suppose $nat$ is a church encoding. For some base type $A$, $nat \coloneqq (A \to A) \to (A \to A)$. Natural numbers are then higher-order functions. They take and return functions. Suddenly, existing work can no longer learn successor. 
+
+The difficulty is with how to handle functions in the return type. The type $nat \!\to\! nat$ returns a function, a program of type $nat$. To learn correct programs, you need to ensure candidates are the correct type or that they obey examples. Imagine we want to verify that our candidate program $f$ obeys $f(1)=2$. With the church encoding, $f(1)$ is a function, and so is $2$. In other words, $f(1)=2$ requires that we decide the equivalence of functions---which is undecidable in a Turing-complete language \cite{sipser2006introduction}. Functions in the return type create this issue. There are two ways out:
+
+\begin{enumerate}
+\item Don't allow functions in the return type, keep Turing-completeness.
+\item Allow functions in the return type, leave Turing-completeness.
+\end{enumerate}
+
+
+% state issue with functions in return type
+% mention two possible solutions: don't allow them, focus on rest of 
+% program space.... or our solution. keep them, use an expressive but
+% normalizing language as your languyage for learning.
 
 
 % Ok, that's surprising but who cares? Mention interesting higher-order.
