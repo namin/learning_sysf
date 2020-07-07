@@ -106,7 +106,7 @@
 \begin{abstract}
 Program synthesis, type inhabitance, inductive programming, and theorem proving. Different names for the same problem: learning programs from data. Sometimes the programs are proofs, sometimes they’re terms. Sometimes data are examples, and sometimes they’re types. Yet the aim is the same. We want to construct a program which satisfies some data. We want to learn a program.
 
-What might a programming language look like, if its programs could also be learned? We give it data, and it learns a program from it. This work shows that System F yields a simple approach for learning from types and examples. Beyond simplicity, System F gives us a guarantee on the soundness and completeness of learning. We learn correct programs, and can learn all observationally distinct programs in System F. Unlike previous works, we don't restrict what examples can be. As a result, we show for the first time how to learn arbitrary higher-order programs in System F from types and examples. 
+What might a programming language look like, if its programs could also be learned? We give it data, and it learns a program from it. This work shows that System F yields a simple approach for learning from types and examples. Beyond simplicity, System F gives us a guarantee on the soundness and completeness of learning. We learn correct programs, and can learn all observationally distinct programs in System F. Unlike previous works, we don't restrict what examples can be. As a result, we show how to learn arbitrary higher-order programs in System F from types and examples. 
 
 \end{abstract}
 
@@ -124,6 +124,26 @@ What might a programming language look like, if its programs could also be learn
 
 
 \section{Introduction}
+
+Imagine we're teaching you a program. Your only data is the type $nat \!\to\! nat$. It takes a natural number, and returns a natural number. Any ideas? Perhaps a program which computes...
+$$f(x) = x, \;\;\;\;\;\;f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2,\;\;\;\;\;\; f(x) = x + \cdots$$
+The good news is that $f(x) = x + 1$ is correct. The bad news is that the data let you learn a slew of other programs too. It doesn't constrain learning enough if we want to teach $f(x) = x + 1$. As teachers, we can provide better data.
+
+Round 2. Imagine we're teaching you a program. But this time we give you an example of the program's behavior. Your data are the type $nat \!\to\! nat$ and an example $f(1) = 2$. It takes a natural number, and returns the successor. Any ideas? Perhaps a program which computes...
+$$f(x) = x + 1,\;\;\;\;\;\; f(x) = x + 2 - 1,\;\;\;\;\;\; f(x) = x + 3 - 2,\;\;\;\;\;\;\cdots$$
+The good news is that $f(x) = x + 1$ is correct. And so are all the other programs, as long as we're agnostic to some details. Types and examples impose useful constraints on learning. It's the data we use when learning in System F \cite{girard1989proofs}.
+
+Existing work can learn successor from similar data \cite{osera2015program, polikarpova2016program}. But suppose $nat$ is a church encoding. For some base type $A$, $nat \coloneqq (A \to A) \to (A \to A)$. Natural numbers are then higher-order functions which both take and return functions. Suddenly, existing work can no longer learn successor.
+
+
+% Ok, that's surprising but who cares? Mention interesting higher-order.
+% Why can't we do it though? Essentially the undecidability of program equality for expressive-languages.
+% What's our solution in a nutshell. Lets' pick a strongly normalizing calculus which is still expressive enough for programs we care about.
+% State contributions explicitly, bulleted:
+% -- Learn arbitrary higher-order programs in System F.
+% -- Prove soundness and completeness of learning
+% -- Implement learning, extending strong theoretical guarantees in practice.
+
 
 % present SysF syntax/typechecking/eval at end
 \section{Learning from Types}
@@ -143,7 +163,8 @@ What might a programming language look like, if its programs could also be learn
 %	 - product types generate subproblems
 
 \section{Experiments}
-\section{Discussion}
+\section{Related Work}
+\section{Conclusion}
 
 
 %% Acknowledgments
